@@ -5,3 +5,7 @@ RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/odin-lang/Odin
 RUN cd Odin && git checkout dev-2024-11 && make
 # RUN mkdir /opt/odin && cp -R ./base ./core ./shared ./vendor ./odin /opt/odin/
+
+USER vscode
+# Add Odin to the PATH
+ENV PATH="/Odin:${PATH}"
