@@ -1,0 +1,5 @@
+package main
+
+PLAYERS_COUNT ::5
+PLAYER_ALIGNMENT ::64
+TEAMS_COUNT ::2
