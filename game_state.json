@@ -1,0 +1,1095 @@
+{
+	"current_turn": 1,
+	"seed": 0,
+	"money": [
+		0,
+		0,
+		0,
+		0,
+		0
+	],
+	"land_state": [
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"owner": 0,
+			"factory_damage": 0,
+			"factory_max_damage": 0,
+			"bombard_max_damage": 0,
+			"land_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"owner": 0,
+			"factory_damage": 0,
+			"factory_max_damage": 0,
+			"bombard_max_damage": 0,
+			"land_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"owner": 0,
+			"factory_damage": 0,
+			"factory_max_damage": 0,
+			"bombard_max_damage": 0,
+			"land_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"owner": 0,
+			"factory_damage": 0,
+			"factory_max_damage": 0,
+			"bombard_max_damage": 0,
+			"land_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"owner": 0,
+			"factory_damage": 0,
+			"factory_max_damage": 0,
+			"bombard_max_damage": 0,
+			"land_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		}
+	],
+	"sea_state": [
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"sea_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"sea_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		},
+		{
+			"territory_state": {
+				"builds_left": 0,
+				"combat_status": 0,
+				"skipped_moves": [
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0
+				],
+				"air_units": [
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					},
+					{
+						"active": [
+
+						],
+						"idle": [
+							0,
+							0,
+							0,
+							0,
+							0
+						]
+					}
+				]
+			},
+			"sea_units": [
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"active": [
+
+					],
+					"idle": [
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			]
+		}
+	]
+}

@@ -6,17 +6,20 @@ import "core:strconv"
 
 main :: proc() {
 	fmt.println("Starting CAAA")
-	iterations := 1000000000
+	iterations := 1_000_000_000
 	if len(os.args) > 1 {
-		iterations = strconv.parse_int(os.args[1]) or_else iterations
+		iterations, _ = strconv.parse_int(os.args[1])
 	}
 	fmt.println("Running ", iterations, " iterations")
-    initialize_random_numbers();
-    // GameState game_state;
-    // load_game_data("game_data.json", game_state);
-    // initialize_map_constants();
-    // MCTSNode* root = mcts_search(game_state, iterations);
-    // uint best_action = select_best_action(root);
-    // print_mcts(root);
-    // fmt.println("Best action: ", best_action);
+	initialize_random_numbers()
+	game_state: Game_State
+	//save_json(game_state)
+	load_game_data("game_state.json", &game_state)
+    //fmt.println("Game state: ", game_state)
+    game_cache: Game_Cache
+	initialize_map_constants(&game_cache);
+	// MCTSNode* root = mcts_search(game_state, iterations);
+	// uint best_action = select_best_action(root);
+	// print_mcts(root);
+	// fmt.println("Best action: ", best_action);
 }
