@@ -17,10 +17,10 @@ ACTION_COUNT :: max(AIRS_COUNT, len(SeaUnitTypesEnum) + 1)
 MAX_INT: int : 1000
 
 Game_Cache :: struct {
-	player_caches:      #soa[PLAYERS_COUNT]Player_Cache,
-	land_caches:        #soa[LANDS_COUNT]Land_Cache,
-	sea_caches:         #soa[SEAS_COUNT]Sea_Cache,
-	canals_pathing:     #soa[CANAL_STATES]Canal_Pathing,
+	players:            #soa[PLAYERS_COUNT]Player_Cache,
+	lands:              #soa[LANDS_COUNT]Land_Cache,
+	seas:               #soa[SEAS_COUNT]Sea_Cache,
+	territories:        [AIRS_COUNT]^Territory_Cache,
 	valid_moves:        [dynamic]int,
 	canal_state:        int,
 	step_id:            int,
@@ -59,6 +59,7 @@ Land_Cache :: struct {
 }
 Sea_Cache :: struct {
 	using territory_cache:             Territory_Cache,
+	canal_paths:                       #soa[CANAL_STATES]Canal_Path,
 	enemy_destroyers_total:            int,
 	enemy_submarines_total:            int,
 	enemy_blockade_total:              int,
@@ -68,10 +69,7 @@ Sea_Cache :: struct {
 	sea_path_blocked:                  int,
 	sub_path_blocked:                  int,
 }
-Canal_Pathing :: struct {
-	seas_pathing: #soa[SEAS_COUNT]Sea_Pathing,
-}
-Sea_Pathing :: struct {
+Canal_Path :: struct {
 	seas_within_1_move:  [dynamic]int,
 	seas_within_2_moves: [dynamic]int,
 	adjacent_lands:      [dynamic]int,
@@ -80,11 +78,15 @@ Sea_Pathing :: struct {
 	next_hop_to_sea_pri: [SEAS_COUNT]int,
 	next_hop_to_sea_alt: [SEAS_COUNT]int,
 }
+
 initialize_map_constants :: proc(game_cache: ^Game_Cache) {
 	initialize_enemies()
 	initialize_land_dist(&game_cache.land_caches)
 	land_dist_floyd_warshall(&game_cache.land_caches)
-	initialize_sea_dist(game_cache)
+	initialize_sea_dist(&game_cache.seas)
+	initialize_canals(&game_cache.seas)
+	sea_dist_floyd_warshall(&game_cache.seas_pathing)
+	initialize_territory_pointers(&game_cache)
 	// initialize_air_dist()
 	// initialize_land_path()
 	// initialize_sea_path()
@@ -105,11 +107,12 @@ initialize_enemies :: proc() {
 		}
 	}
 }
-initialize_land_dist :: proc(land_caches: ^#soa[LANDS_COUNT]Land_Cache) {
-	for &land_cache in land_caches {
+initialize_land_dist :: proc(lands: ^#soa[LANDS_COUNT]Land_Cache) {
+	for &land_cache, land_idx in lands {
 		for &land_distance in land_cache.land_distances {
 			land_distance = MAX_INT
 		}
+		land_cache.land_distances[land_idx] = 0
 		for adjacent_territory in land_cache.adjacent_territories {
 			if adjacent_territory < LANDS_COUNT {
 				append(&land_cache.adjacent_lands, adjacent_territory)
@@ -120,9 +123,9 @@ initialize_land_dist :: proc(land_caches: ^#soa[LANDS_COUNT]Land_Cache) {
 		}
 	}
 }
-land_dist_floyd_warshall :: proc(land_caches: ^#soa[LANDS_COUNT]Land_Cache) {
-	for land1, land_idx1 in land_caches {
-		for &land2 in land_caches {
+land_dist_floyd_warshall :: proc(lands: ^#soa[LANDS_COUNT]Land_Cache) {
+	for land1, land_idx1 in lands {
+		for &land2 in lands {
 			for land_idx3 in 0 ..< LANDS_COUNT {
 				new_dist := land2.land_distances[land_idx1] + land1.land_distances[land_idx3]
 				if new_dist < land2.land_distances[land_idx3] {
@@ -132,49 +135,79 @@ land_dist_floyd_warshall :: proc(land_caches: ^#soa[LANDS_COUNT]Land_Cache) {
 		}
 	}
 }
-initialize_sea_dist :: proc(game_cache: ^Game_Cache) {
-	for &canal_pathing, canal_state in game_cache.canals_pathing {
-		for sea_cache, sea_idx in game_cache.sea_caches {
-			sea_pathing := canal_pathing.seas_pathing[sea_idx]
-			sea_distances := sea_pathing.sea_distances
+initialize_sea_dist :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
+	for sea, sea_idx in seas {
+		for canal_path in sea.canal_paths {
 			for &sea_distance in sea_distances {
 				sea_distance = MAX_INT
 			}
-			for adjacent_territory in sea_cache.adjacent_territories {
+			canal_path.sea_distances[sea_idx] = 0
+			for adjacent_territory in sea.adjacent_territories {
 				if adjacent_territory < LANDS_COUNT {
-					append(&sea_pathing.adjacent_lands, adjacent_territory)
+					append(&canal_path.adjacent_lands, adjacent_territory)
 				} else {
-					append(&sea_pathing.adjacent_seas, adjacent_territory)
-					sea_distances[adjacent_territory] = 1
+					append(&canal_path.adjacent_seas, adjacent_territory)
+					canal_path.sea_distances[adjacent_territory] = 1
 				}
 			}
 		}
-		// convert canal_state to a bitmask and loop through CANALS for those
-		// enabled for example if canal_state is 0, do not process any items in
-		// CANALS, if canal_state is 1, process the first item in CANALS, if
-		// canal_state is 2, process the second item in CANALS, if canal_state is
-		// 3, process the first and second items in CANALS, etc.
+	}
+
+	sea_dist_floyd_warshall(&canal_pathing.seas_pathing)
+}
+initialize_canals :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
+	// convert canal_state to a bitmask and loop through CANALS for those
+	// enabled for example if canal_state is 0, do not process any items in
+	// CANALS, if canal_state is 1, process the first item in CANALS, if
+	// canal_state is 2, process the second item in CANALS, if canal_state is
+	// 3, process the first and second items in CANALS, etc.
+	for canal_state in 0 ..< CANAL_STATES {
+		adjacent_seas := canal[canal_state].adjacent_seas
+		sea_distances := canal[canal_state].sea_distances
 		for canal, canal_idx in CANALS {
+			sea1 := canal.sea1
+			sea2 := canal.sea2
 			if (canal_state & (1 << uint(canal_idx))) == 0 {
 				continue
 			}
-			append(&canal_pathing.seas_pathing[canal.sea1].adjacent_seas, canal.sea2)
-			canal_pathing.seas_pathing[canal.sea1].sea_distances[canal.sea2] = 1
-			append(&canal_pathing.seas_pathing[canal.sea2].adjacent_seas, canal.sea1)
-			canal_pathing.seas_pathing[canal.sea2].sea_distances[canal.sea1] = 1
+			append(&seas[sea1], adjacent_seas, sea2)
+			seas[sea1], sea_distances[sea2] = 1
+			append(&seas[sea2], adjacent_seas, sea1)
+			seas[sea2], sea_distances[sea1] = 1
 		}
-		sea_dist_floyd_warshall(&canal_pathing.seas_pathing);
 	}
 }
-sea_dist_floyd_warshall :: proc(seas_pathing: ^#soa[SEAS_COUNT]Sea_Pathing) {
-	for sea1, sea_idx1 in seas_pathing {
-		for &sea2 in seas_pathing {
-			for sea_idx3 in 0 ..< SEAS_COUNT {
-				new_dist := sea2.sea_distances[sea_idx1] + sea1.sea_distances[sea_idx3]
-				if new_dist < sea2.sea_distances[sea_idx3] {
-					sea2.sea_distances[sea_idx3] = new_dist
+sea_dist_floyd_warshall :: proc(seas: ^#soa[SEAS_COUNT]Sea_Cache) {
+	for canal_state in 0 ..< CANAL_STATES {
+		for sea1, sea_idx1 in seas {
+			for &sea2 in seas {
+				for sea_idx3 in 0 ..< SEAS_COUNT {
+					new_dist := sea2.canal_paths[canal_state].sea_distances[sea_idx1] + sea1.canal_paths[canal_state].sea_distances[sea_idx3]
+					if new_dist < sea2.sea_distances[sea_idx3] {
+						sea2.sea_distances[sea_idx3] = new_dist
+					}
 				}
 			}
 		}
 	}
+}
+initialize_territory_pointers :: proc(game_cache: ^Game_Cache) {
+	for &land, land_idx in game_cache.lands {
+		game_cache.territories[land_idx] = &land.territory_cache
+	}
+	for &sea, sea_idx in game_cache.seas {
+		game_cache.territories[sea_idx + LANDS_COUNT] = &sea.territory_cache
+	}
+}
+initialize_air_dist :: proc(territories: [AIRS_COUNT]^Territory_Cache) {
+	for &territory, territory_idx in territories {
+		for &air_distance in territory.air_distances {
+			air_distance = MAX_INT
+		}
+		for adjacent_territory in territory.adjacent_territories {
+			territory.air_distances[adjacent_territory] = 1
+		}
+		territory.air_distances[territory_idx] = 0
+	}
+	air_dist_floyd_warshall()
 }
