@@ -12,7 +12,8 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"DanielGavin.ols"
+				"DanielGavin.ols",
+				"vadimcn.vscode-lldb"
 			]
 		}
 	}

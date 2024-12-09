@@ -11,29 +11,27 @@ Game_State :: struct {
 }
 
 Territory_State :: struct {
-	builds_left:   int,
-	combat_status: Combat_Status,
-	skipped_moves: [TERRITORIES_COUNT]int,
-	air_units:     #soa[len(AirUnitTypeEnum)]Unit_Counts,
+	idle_air_units:   [PLAYERS_COUNT][len(Idle_Air_Unit_Type)]int,
+	active_air_units: [len(Active_Air_Unit_Type)]int,
+	skipped_moves:    [TERRITORIES_COUNT]int,
+	combat_status:    Combat_Status,
+	builds_left:      int,
 }
 
 Land_State :: struct {
 	using territory_state: Territory_State,
+	idle_land_units:       [PLAYERS_COUNT][len(Idle_Land_Unit_Type)]int,
+	active_land_units:     [len(Active_Land_Unit_Type)]int,
 	owner:                 int,
 	factory_damage:        int,
 	factory_max_damage:    int,
 	bombard_max_damage:    int,
-	land_units:            #soa[len(LandUnitTypeEnum)]Unit_Counts,
 }
 
 Sea_State :: struct {
 	using territory_state: Territory_State,
-	sea_units:             #soa[len(SeaUnitTypesEnum)]Unit_Counts,
-}
-
-Unit_Counts :: struct {
-	active: [dynamic]int,
-	idle:   [PLAYERS_COUNT]int,
+	idle_sea_units:        [PLAYERS_COUNT][len(Idle_Sea_Unit_Type)]int,
+	active_sea_units:      [len(Active_Sea_Unit_Type)]int,
 }
 
 Combat_Status :: enum {

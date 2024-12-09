@@ -1,16 +1,14 @@
 package main
 
-Canal :: struct {
-	sea1:  int,
-	sea2:  int,
-	land1: int,
-    land2: int,
+Canal_Strings :: struct {
+	sea1:  string,
+	sea2:  string,
+	land1: string,
+	land2: string,
 }
 
-CANALS := [?]Canal {
-    {0,0,0,0},
-    {0,0,0,0},
-}
+CANALS := [?]Canal_Strings{{"Pacific", "Baltic", "Moscow", "Moscow"}}
+CANALS_COUNT :: len(CANALS)
+CANAL_STATES :: 1 << CANALS_COUNT
 
-CANAL_STATES :: 1 << len(CANALS)
 //Canal_State_Set :: bit_set[0..<len(CANALS)]

@@ -1,5 +1,10 @@
 package main
 
+import sa "core:container/small_array"
+import "core:fmt"
+import "core:mem"
+import "core:strings"
+
 FIGHTER_MOVES_MAX :: 4
 MIN_AIR_HOPS :: 2
 MAX_AIR_HOPS :: 6
@@ -11,82 +16,129 @@ AIR_MOVE_SIZE :: 1 + MAX_AIR_HOPS - MIN_AIR_HOPS
 SEA_MOVE_SIZE :: 1 + MAX_SEA_HOPS - MIN_SEA_HOPS
 LAND_MOVE_SIZE :: 1 + MAX_LAND_HOPS - MIN_LAND_HOPS
 PLAYERS_COUNT_P1 :: PLAYERS_COUNT + 1
-AIRS_COUNT :: LANDS_COUNT + SEAS_COUNT
 MAX_AIR_TO_AIR_CONNECTIONS :: 7
-ACTION_COUNT :: max(AIRS_COUNT, len(SeaUnitTypesEnum) + 1)
-MAX_INT: int : 1000
+ACTION_COUNT :: max(TERRITORIES_COUNT, len(Active_Sea_Unit_Type) + 1)
+MAX_U8 :: 255
+MAX_FACTORY_LOCATIONS :: 5
+MAX_ADJACENT_TERRITORIES :: 6
+MAX_ADJACENT_LANDS :: 6
+MAX_ADJACENT_SEAS :: 6
+MAX_VALID_MOVES :: 20
 
 Game_Cache :: struct {
-	players:            #soa[PLAYERS_COUNT]Player_Cache,
-	lands:              #soa[LANDS_COUNT]Land_Cache,
-	seas:               #soa[SEAS_COUNT]Sea_Cache,
-	territories:        [AIRS_COUNT]^Territory_Cache,
-	valid_moves:        [dynamic]int,
-	canal_state:        int,
-	step_id:            int,
-	answers_remaining:  int,
-	selected_action:    int,
-	unlucky_player_idx: int,
-	max_loops:          int,
-	actually_print:     bool,
+	teams:             [TEAMS_COUNT]Team_Cache,
+	seas:              [SEAS_COUNT]Sea_Cache,
+	lands:             [LANDS_COUNT]Land_Cache,
+	players:           [PLAYERS_COUNT]Player_Cache,
+	canal_paths:       [CANAL_STATES]Canal_Path,
+	territories:       [TERRITORIES_COUNT]^Territory_Cache,
+	valid_moves:       sa.Small_Array(MAX_VALID_MOVES, uint),
+	unlucky_player:    ^Player_Cache,
+	canal_state:       ^Canal_Path,
+	step_id:           uint,
+	answers_remaining: uint,
+	selected_action:   uint,
+	max_loops:         uint,
+	actually_print:    bool,
 }
+
+Team_Cache :: struct {
+	players:       sa.Small_Array(PLAYERS_COUNT, ^Player_Cache),
+	enemy_players: sa.Small_Array(PLAYERS_COUNT, ^Player_Cache),
+	enemy_team:    ^Team_Cache,
+	is_allied:     [PLAYERS_COUNT]bool,
+}
+
 Player_Cache :: struct {
-	factory_locations:  [dynamic]int,
-	income_per_turn:    int,
-	total_player_units: int,
+	factory_locations:  sa.Small_Array(MAX_FACTORY_LOCATIONS, ^Land_Cache),
+	captial_index:      ^Land_Cache,
+	team:               ^Team_Cache,
+	income_per_turn:    uint,
+	total_player_units: uint,
+	index:              int,
 }
 Territory_Cache :: struct {
-	enemy_fighters_total:       int,
+	air_distances:              [TERRITORIES_COUNT]^Territory_Cache,
+	territory_within_6_moves:   sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	territory_within_5_moves:   sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	territory_within_4_moves:   sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	territory_within_3_moves:   sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	territory_within_2_moves:   sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	airs_1_to_4_moves_away:     sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	airs_2_to_4_moves_away:     sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	airs_3_to_4_moves_away:     sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	airs_4_moves_away:          sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache),
+	land_within_6_moves:        sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	land_within_5_moves:        sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	land_within_4_moves:        sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	land_within_3_moves:        sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	land_within_2_moves:        sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	adjacent_lands:             sa.Small_Array(MAX_ADJACENT_LANDS, ^Land_Cache),
+	teams_unit_count:           [TEAMS_COUNT]uint,
+	enemy_fighters_total:       uint,
+	territory_index:            uint,
 	can_fighter_land_here:      bool,
 	can_fighter_land_in_1_move: bool,
 	can_bomber_land_here:       bool,
 	can_bomber_land_in_1_move:  bool,
 	can_bomber_land_in_2_moves: bool,
-	adjacent_territories:       [dynamic]int,
-	teams_unit_count:           [TEAMS_COUNT]int,
-	air_distances:              [TERRITORIES_COUNT]int,
-	territory_within_x_moves:   [MAX_AIR_HOPS][dynamic]int,
-	land_within_x_moves:        [MAX_AIR_HOPS][dynamic]int,
-	airs_x_to_4_moves_away:     [FIGHTER_MOVES_MAX][dynamic]int,
 }
 Land_Cache :: struct {
 	using territory_cache: Territory_Cache,
-	land_path_blocked:     int,
-	value:                 int,
-	adjacent_lands:        [dynamic]int,
-	adjacent_seas:         [dynamic]int,
-	land_distances:        [LANDS_COUNT]int,
+	//land_distances:        [LANDS_COUNT]uint,
+	lands_within_2_moves:  sa.Small_Array(LANDS_COUNT, Land_2_Destination),
+	seas_within_2_moves:   sa.Small_Array(SEAS_COUNT, Sea_2_Destination),
+	adjacent_seas:              sa.Small_Array(MAX_ADJACENT_SEAS, ^Sea_Cache),
+	//land_path_blocked:     [LANDS_COUNT]bool,
+	original_owner:        ^Player_Cache,
+	value:                 uint,
+	land_index:            uint,
 }
 Sea_Cache :: struct {
 	using territory_cache:             Territory_Cache,
-	canal_paths:                       #soa[CANAL_STATES]Canal_Path,
-	enemy_destroyers_total:            int,
-	enemy_submarines_total:            int,
-	enemy_blockade_total:              int,
-	allied_carriers:                   int,
-	transports_with_large_cargo_space: int,
-	transports_with_small_cargo_space: int,
-	sea_path_blocked:                  int,
-	sub_path_blocked:                  int,
+	enemy_destroyers_total:            uint,
+	enemy_submarines_total:            uint,
+	enemy_blockade_total:              uint,
+	allied_carriers:                   uint,
+	transports_with_large_cargo_space: uint,
+	transports_with_small_cargo_space: uint,
+	sea_index:                         uint,
+	sea_path_blocked:                  bool,
+	sub_path_blocked:                  bool,
 }
+
 Canal_Path :: struct {
-	seas_within_1_move:  [dynamic]int,
-	seas_within_2_moves: [dynamic]int,
-	adjacent_lands:      [dynamic]int,
-	adjacent_seas:       [dynamic]int,
-	sea_distances:       [SEAS_COUNT]int,
-	next_hop_to_sea_pri: [SEAS_COUNT]int,
-	next_hop_to_sea_alt: [SEAS_COUNT]int,
+	starting_sea: [SEAS_COUNT]Sea_Distances,
+	index:        uint,
+}
+
+Sea_Distances :: struct {
+	//seas_within_1_move:  [MAX_ADJACENT_TERRITORIES]int,
+	//sea_distances:       [SEAS_COUNT]uint,
+	seas_within_2_moves: sa.Small_Array(SEAS_COUNT, Sea_2_Destination),
+	adjacent_seas:       sa.Small_Array(MAX_ADJACENT_SEAS, ^Sea_Cache),
+}
+
+Land_2_Destination :: struct {
+	destination_land:     ^Land_Cache,
+	next_hop_to_land_pri: ^Land_Cache,
+	next_hop_to_land_alt: ^Land_Cache,
+}
+
+Sea_2_Destination :: struct {
+	destination_sea:     ^Sea_Cache,
+	next_hop_to_sea_pri: ^Sea_Cache,
+	next_hop_to_sea_alt: ^Sea_Cache,
 }
 
 initialize_map_constants :: proc(game_cache: ^Game_Cache) {
-	initialize_enemies()
-	initialize_land_dist(&game_cache.land_caches)
-	land_dist_floyd_warshall(&game_cache.land_caches)
-	initialize_sea_dist(&game_cache.seas)
+	initialize_teams(&game_cache.teams, &game_cache.players)
+	initialize_land_dist(&game_cache.lands)
+	land_dist_floyd_warshall(&game_cache.lands)
+	initialize_sea_dist(&game_cache.seas, &game_cache.canal_paths)
 	initialize_canals(&game_cache.seas)
-	sea_dist_floyd_warshall(&game_cache.seas_pathing)
-	initialize_territory_pointers(&game_cache)
+	sea_dist_floyd_warshall(&game_cache.seas)
+	initialize_territory_pointers(game_cache)
 	// initialize_air_dist()
 	// initialize_land_path()
 	// initialize_sea_path()
@@ -94,36 +146,72 @@ initialize_map_constants :: proc(game_cache: ^Game_Cache) {
 	// intialize_airs_x_to_4_moves_away()
 	// initialize_skip_4air_precals()
 }
-initialize_enemies :: proc() {
-	for &player in PLAYERS {
-		player.enemy_team = 1 - player.team
-		for other_player, j in PLAYERS {
-			if (player.team == other_player.team) {
-				player.is_allied[j] = true
-				append(&player.allies, j)
+initialize_teams :: proc(teams: ^[TEAMS_COUNT]Team_Cache, players: ^[PLAYERS_COUNT]Player_Cache) {
+	for &team, team_idx in teams {
+		for &other_team in teams {
+			team.enemy_team = &other_team
+		}
+		for &player, player_idx in players {
+			if strings.compare(PLAYERS[player_idx].team, TEAMS[team_idx]) == 0 {
+				sa.append(&team.players, &player)
+				team.is_allied[player_idx] = true
+				player.team = &team
+				player.index = player_idx
 			} else {
-				append(&player.enemies, j)
+				sa.append(&team.enemy_players, &player)
+				team.is_allied[player_idx] = false
 			}
 		}
 	}
 }
-initialize_land_dist :: proc(lands: ^#soa[LANDS_COUNT]Land_Cache) {
-	for &land_cache, land_idx in lands {
-		for &land_distance in land_cache.land_distances {
-			land_distance = MAX_INT
+
+get_land_idx_from_string :: proc(land_name: string) -> (land_idx: int, ok: bool) {
+	for land, land_idx in LANDS {
+		if strings.compare(land.name, land_name) == 0 {
+			return land_idx, true
 		}
-		land_cache.land_distances[land_idx] = 0
-		for adjacent_territory in land_cache.adjacent_territories {
-			if adjacent_territory < LANDS_COUNT {
-				append(&land_cache.adjacent_lands, adjacent_territory)
-				land_cache.land_distances[adjacent_territory] = 1
-			} else {
-				append(&land_cache.adjacent_seas, adjacent_territory)
+	}
+	// print error
+	fmt.eprintln("Error: Land not found: %s\n", land_name)
+	return 0, false
+}
+
+get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
+	for sea, sea_idx in SEAS {
+		if strings.compare(sea.name, sea_name) == 0 {
+			return sea_idx, true
+		}
+	}
+	// print error
+	fmt.eprintln("Error: Sea not found: %s\n", sea_name)
+	return 0, false
+}
+
+initialize_land_dist :: proc(lands: ^[LANDS_COUNT]Land_Cache) -> (ok: bool) {
+	for &land, land_idx in lands {
+		mem.set(&land.land_distances, MAX_U8, len(land.land_distances))
+		land.land_distances[land_idx] = 0
+		for adjacent_land in LANDS[land_idx].land_conns {
+			land_idx_match, ok := get_land_idx_from_string(adjacent_land)
+			if !ok {
+				return false
 			}
+			sa.append(&land.adjacent_lands, &lands[land_idx_match])
+			land.land_distances[land_idx_match] = 1
+			lands[land_idx_match].land_distances[land_idx] = 1
+		}
+		for adjacent_sea in LANDS[land_idx].sea_conns {
+			sea_idx_match, ok := get_sea_idx_from_string(adjacent_sea)
+			if !ok {
+				return false
+			}
+			sa.append(&land.adjacent_seas, &seas[sea_idx_match])
+			land.land_distances[sea_idx_match] = 1
+			seas[sea_idx_match].land_distances[land_idx] = 1
 		}
 	}
 }
-land_dist_floyd_warshall :: proc(lands: ^#soa[LANDS_COUNT]Land_Cache) {
+land_dist_floyd_warshall :: proc(lands: ^[LANDS_COUNT]Land_Cache) {
 	for land1, land_idx1 in lands {
 		for &land2 in lands {
 			for land_idx3 in 0 ..< LANDS_COUNT {
@@ -135,14 +223,15 @@ land_dist_floyd_warshall :: proc(lands: ^#soa[LANDS_COUNT]Land_Cache) {
 		}
 	}
 }
-initialize_sea_dist :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
-	for sea, sea_idx in seas {
-		for canal_path in sea.canal_paths {
-			for &sea_distance in sea_distances {
-				sea_distance = MAX_INT
-			}
-			canal_path.sea_distances[sea_idx] = 0
-			for adjacent_territory in sea.adjacent_territories {
+initialize_sea_dist :: proc(
+	seas: ^[SEAS_COUNT]Sea_Cache,
+	canal_pathing: ^[MAX_CANAL_PATHS]Canal_Path,
+) {
+	for &canal_path in canal_pathing {
+		for &starting_sea, sea_idx in canal_path.starting_sea {
+			mem.set(&starting_sea.sea_distances, MAX_UINT, len(starting_sea.sea_distances))
+			starting_sea.sea_distances[sea_idx] = 0
+			for adjacent_sea in starting_sea.adjacent_territories {
 				if adjacent_territory < LANDS_COUNT {
 					append(&canal_path.adjacent_lands, adjacent_territory)
 				} else {
@@ -155,7 +244,7 @@ initialize_sea_dist :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
 
 	sea_dist_floyd_warshall(&canal_pathing.seas_pathing)
 }
-initialize_canals :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
+initialize_canals :: proc(seas: ^[SEAS_COUNT]Sea_Cache) {
 	// convert canal_state to a bitmask and loop through CANALS for those
 	// enabled for example if canal_state is 0, do not process any items in
 	// CANALS, if canal_state is 1, process the first item in CANALS, if
@@ -177,12 +266,14 @@ initialize_canals :: proc(seas: #soa[SEAS_COUNT]Sea_Cache) {
 		}
 	}
 }
-sea_dist_floyd_warshall :: proc(seas: ^#soa[SEAS_COUNT]Sea_Cache) {
+sea_dist_floyd_warshall :: proc(seas: ^[SEAS_COUNT]Sea_Cache) {
 	for canal_state in 0 ..< CANAL_STATES {
 		for sea1, sea_idx1 in seas {
 			for &sea2 in seas {
 				for sea_idx3 in 0 ..< SEAS_COUNT {
-					new_dist := sea2.canal_paths[canal_state].sea_distances[sea_idx1] + sea1.canal_paths[canal_state].sea_distances[sea_idx3]
+					new_dist :=
+						sea2.canal_paths[canal_state].sea_distances[sea_idx1] +
+						sea1.canal_paths[canal_state].sea_distances[sea_idx3]
 					if new_dist < sea2.sea_distances[sea_idx3] {
 						sea2.sea_distances[sea_idx3] = new_dist
 					}
@@ -199,7 +290,7 @@ initialize_territory_pointers :: proc(game_cache: ^Game_Cache) {
 		game_cache.territories[sea_idx + LANDS_COUNT] = &sea.territory_cache
 	}
 }
-initialize_air_dist :: proc(territories: [AIRS_COUNT]^Territory_Cache) {
+initialize_air_dist :: proc(territories: [TERRITORIES_COUNT]^Territory_Cache) {
 	for &territory, territory_idx in territories {
 		for &air_distance in territory.air_distances {
 			air_distance = MAX_INT

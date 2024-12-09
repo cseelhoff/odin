@@ -1,27 +1,21 @@
 package main
 
-PLAYERS_COUNT :: 5
-PLAYER_ALIGNMENT :: 64
-TEAMS_COUNT :: 2
+PLAYERS_COUNT :: len(PLAYERS)
 
-Player :: struct {
-	team:                    int,
-	player_name:             string,
-	color:                   string,
-	capital_territory_index: int,
-	is_human:                bool,
-	is_allied:               [PLAYERS_COUNT]bool, // alied with self
-	allies:                  [dynamic]int,
-	enemies:                 [dynamic]int,
-	enemy_team:              int,
+Player_Strings :: struct {
+	team:        string,
+	player_name: string,
+	color:       string,
+	capital:     string,
 }
 
-PLAYERS := [PLAYERS_COUNT]Player {
-	{0, "Rus", "\033[1;31m", 3, false, {}, {}, {}, 0},
-	{1, "Ger", "\033[1;34m", 2, false, {}, {}, {}, 0},
-	{0, "Eng", "\033[1;95m", 1, false, {}, {}, {}, 0},
-	{1, "Ger", "\033[1;34m", 2, false, {}, {}, {}, 0},
-	{0, "USA", "\033[1;32m", 0, false, {}, {}, {}, 0},
-}
+TEAMS := [?]string {"Allies", "Axis"}
+TEAMS_COUNT :: len(TEAMS)
 
-//TEAMS: [TEAMS_COUNT][dynamic]int = [TEAMS_COUNT][dynamic]int{[dynamic]int{0,2,4}, [dynamic]int{1,3}}
+PLAYERS := [?]Player_Strings {
+	{team = "Allies", player_name = "Rus", color = "\033[1;31m", capital = "Moscow"},
+	{team = "Axis", player_name = "Ger", color = "\033[1;34m", capital = "Berlin"},
+	{team = "Allies", player_name = "Eng", color = "\033[1;95m", capital = "London"},
+	{team = "Axis", player_name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
+	{team = "Allies", player_name = "USA", color = "\033[1;32m", capital = "Washington"},
+}
