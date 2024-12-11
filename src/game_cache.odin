@@ -8,10 +8,7 @@ MAX_VALID_MOVES :: 20
 Territory_Pointers :: [TERRITORIES_COUNT]^Territory_Cache
 SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache)
 SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land_Cache)
-//SA_Adjacent_Lands :: sa.Small_Array(MAX_ADJACENT_LANDS, ^Land_Cache)
 SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player_Cache)
-//Canal_Paths :: [CANAL_STATES]Canal_Path
-//Canal_Path :: [SEAS_COUNT]Sea_Distances
 
 Game_Cache :: struct {
 	teams:             Teams,
@@ -42,7 +39,7 @@ initialize_map_constants :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	initialize_lands_2_moves_away(&gc.lands)
 	// initialize_seas_2_moves_away(&gc.seas, &gc.canal_paths)
 	initialize_seas_2_moves_away(&gc.seas)
-	initialize_air_dist(&gc.lands, &gc.seas, &gc.canal_paths[CANAL_STATES - 1], &gc.territories)
+	initialize_air_dist(&gc.lands, &gc.seas, &gc.territories)
 	// initialize_land_path()
 	// initialize_sea_path()
 	// initialize_within_x_moves()

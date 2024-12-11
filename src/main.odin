@@ -17,7 +17,11 @@ main :: proc() {
   load_game_data("game_state.json", &game_state)
     //fmt.println("Game state: ", game_state)
     game_cache: Game_Cache
-  initialize_map_constants(&game_cache) or_return;
+  ok := initialize_map_constants(&game_cache)
+  if !ok {
+    fmt.eprintln("Error initializing map constants")
+    return
+  }
   // MCTSNode* root = mcts_search(game_state, iterations);
   // uint best_action = select_best_action(root);
   // print_mcts(root);

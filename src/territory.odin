@@ -70,12 +70,7 @@ initialize_costal_connections :: proc(lands: ^Lands, seas: ^Seas) -> (ok: bool) 
 	return true
 }
 
-initialize_air_dist :: proc(
-	lands: ^Lands,
-	seas: ^Seas,
-	canal_path: ^Canal_Path,
-	territories: ^Territory_Pointers,
-) {
+initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
 	distances: [TERRITORIES_COUNT][TERRITORIES_COUNT]uint
 	INFINITY :: 255
 	mem.set(&distances, INFINITY, len(distances))
@@ -87,14 +82,14 @@ initialize_air_dist :: proc(
 			distances[territory_index][adjacent_land.territory_index] = 1
 		}
 	}
-	for &land, land_idx in lands {
+	for &land in lands {
 		for adjacent_sea in sa.slice(&land.adjacent_seas) {
 			distances[land.territory_index][adjacent_sea.territory_index] = 1
 		}
 	}
-	for &sea_distances, sea_idx in canal_path {
-		for adjacent_sea in sa.slice(&sea_distances.adjacent_seas) {
-			distances[seas[sea_idx].territory_index][adjacent_sea.territory_index] = 1
+	for &sea in seas {
+		for adjacent_sea in sa.slice(&sea.canal_paths[CANAL_STATES - 1].adjacent_seas) {
+			distances[sea.territory_index][adjacent_sea.territory_index] = 1
 		}
 	}
 	for mid_idx in 0 ..< TERRITORIES_COUNT {
