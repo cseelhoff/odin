@@ -1,21 +1,75 @@
 package main
 
-PLAYERS_COUNT :: len(PLAYERS)
+import "core:fmt"
+import "core:strings"
+import sa "core:container/small_array"
+
+PLAYERS_COUNT :: len(PLAYER_STRINGS)
 
 Player_Strings :: struct {
-	team:        string,
-	player_name: string,
-	color:       string,
-	capital:     string,
+	name:    string,
+	team:    string,
+	color:   string,
+	capital: string,
 }
 
-TEAMS := [?]string {"Allies", "Axis"}
-TEAMS_COUNT :: len(TEAMS)
+PLAYER_STRINGS := [?]Player_Strings {
+	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow"},
+	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin"},
+	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London"},
+	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
+	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington"},
+}
 
-PLAYERS := [?]Player_Strings {
-	{team = "Allies", player_name = "Rus", color = "\033[1;31m", capital = "Moscow"},
-	{team = "Axis", player_name = "Ger", color = "\033[1;34m", capital = "Berlin"},
-	{team = "Allies", player_name = "Eng", color = "\033[1;95m", capital = "London"},
-	{team = "Axis", player_name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
-	{team = "Allies", player_name = "USA", color = "\033[1;32m", capital = "Washington"},
+Players :: [PLAYERS_COUNT]Player_Cache
+Player_Cache :: struct {
+	factory_locations:  sa.Small_Array(LANDS_COUNT, ^Land_Cache),
+	captial_index:      ^Land_Cache,
+	team:               ^Team_Cache,
+	income_per_turn:    uint,
+	total_player_units: uint,
+	index:              int,
+}
+
+TEAM_STRINGS := [?]string{"Allies", "Axis"}
+TEAMS_COUNT :: len(TEAM_STRINGS)
+
+Teams :: [TEAMS_COUNT]Team_Cache
+Team_Cache :: struct {
+	players:       SA_Player_Pointers,
+	enemy_players: SA_Player_Pointers,
+	enemy_team:    ^Team_Cache, // not an array, since assumption is 2 teams
+	is_allied:     [PLAYERS_COUNT]bool,
+}
+
+get_player_idx_from_string :: proc(player_name: string) -> (player_idx: int, ok: bool) {
+	for player, player_idx in PLAYER_STRINGS {
+		if strings.compare(player.name, player_name) == 0 {
+			return player_idx, true
+		}
+	}
+	fmt.eprintln("Error: Player not found: %s\n", player_name)
+	return 0, false
+}
+
+initialize_teams :: proc(teams: ^Teams, players: ^Players) {
+	for &team, team_idx in teams {
+		for &other_team in teams {
+			if &team != &other_team {
+				team.enemy_team = &other_team
+				break
+			}
+		}
+		for &player, player_idx in players {
+			if strings.compare(PLAYER_STRINGS[player_idx].team, TEAM_STRINGS[team_idx]) == 0 {
+				sa.push(&team.players, &player)
+				team.is_allied[player_idx] = true
+				player.team = &team
+				player.index = player_idx
+			} else {
+				sa.push(&team.enemy_players, &player)
+				team.is_allied[player_idx] = false
+			}
+		}
+	}
 }

@@ -1,7 +1,5 @@
 package main
 
-TERRITORIES_COUNT :: LANDS_COUNT + SEAS_COUNT
-
 Game_State :: struct {
 	current_turn: int,
 	seed:         int,
