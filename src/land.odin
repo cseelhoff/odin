@@ -1,4 +1,4 @@
-package main
+package oaaa
 
 import sa "core:container/small_array"
 import "core:fmt"
@@ -8,9 +8,9 @@ import "core:strings"
 
 MAX_LAND_TO_SEA_CONNECTIONS :: 4
 LANDS_COUNT :: len(LANDS_STRINGS)
-Lands :: [LANDS_COUNT]Land_Cache
+Lands :: [LANDS_COUNT]Land
 MAX_PATHS_TO_LAND :: 2
-SA_Adjacent_L2S :: sa.Small_Array(MAX_LAND_TO_SEA_CONNECTIONS, ^Sea_Cache)
+SA_Adjacent_L2S :: sa.Small_Array(MAX_LAND_TO_SEA_CONNECTIONS, ^Sea)
 
 Land_Strings :: struct {
 	name:  string,
@@ -18,20 +18,25 @@ Land_Strings :: struct {
 	value: uint,
 }
 
-Land_Cache :: struct {
-	using territory:    Territory_Cache,
+Land :: struct {
+	using territory:    Territory,
+	idle_land_units:    [PLAYERS_COUNT]Idle_Land_For_Player,
+	active_land_units:  [len(Active_Land_Unit_Type)]uint,
+	owner:              ^Player,
+	factory_damage:     uint,
+	factory_max_damage: uint,
+	bombard_max_damage: uint,
 	lands_2_moves_away: sa.Small_Array(LANDS_COUNT, Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, Sea_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,
-	//land_path_blocked:     [LANDS_COUNT]bool,
-	original_owner:     ^Player_Cache,
+	original_owner:     ^Player,
 	value:              uint,
 	land_index:         int,
 }
 
 Land_2_Moves_Away :: struct {
-	land:      ^Land_Cache,
-	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land_Cache),
+	land:      ^Land,
+	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
 }
 
 //  PACIFIC | USA | ATLANTIC | ENG | BALTIC | GER | RUS | JAP | PAC
@@ -107,7 +112,7 @@ initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 	}
 }
 
-initialize_canals :: proc(lands: ^[LANDS_COUNT]Land_Cache) -> (ok: bool){
+initialize_canals :: proc(lands: ^[LANDS_COUNT]Land) -> (ok: bool) {
 	// convert canal_state to a bitmask and loop through CANALS for those
 	// enabled for example if canal_state is 0, do not process any items in
 	// CANALS, if canal_state is 1, process the first item in CANALS, if

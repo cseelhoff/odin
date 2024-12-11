@@ -1,4 +1,4 @@
-package main
+package oaaa
 import sa "core:container/small_array"
 import "core:fmt"
 import "core:mem"
@@ -8,16 +8,18 @@ import "core:strings"
 MAX_SEA_TO_LAND_CONNECTIONS :: 6
 MAX_SEA_TO_SEA_CONNECTIONS :: 7
 SEAS_COUNT :: len(SEAS_STRINGS)
-Seas :: [SEAS_COUNT]Sea_Cache
+Seas :: [SEAS_COUNT]Sea
 CANALS_COUNT :: len(CANALS)
 CANAL_STATES :: 1 << CANALS_COUNT
 MAX_PATHS_TO_SEA :: 2
-SA_Adjacent_S2S :: sa.Small_Array(MAX_SEA_TO_SEA_CONNECTIONS, ^Sea_Cache)
+SA_Adjacent_S2S :: sa.Small_Array(MAX_SEA_TO_SEA_CONNECTIONS, ^Sea)
 Canal_Paths :: [CANAL_STATES]Sea_Distances
 Seas_2_Moves_Away :: sa.Small_Array(SEAS_COUNT, Sea_2_Moves_Away)
 
-Sea_Cache :: struct {
-	using territory:                   Territory_Cache,
+Sea :: struct {
+	using territory:                   Territory,
+	idle_sea_units:                    [PLAYERS_COUNT]Idle_Sea_For_Player,
+	active_sea_units:                  [len(Active_Sea_Unit_Type)]uint,
 	canal_paths:                       Canal_Paths,
 	enemy_destroyers_total:            uint,
 	enemy_submarines_total:            uint,
@@ -40,14 +42,14 @@ Sea_Distances :: struct {
 }
 
 Sea_2_Moves_Away :: struct {
-	sea:      ^Sea_Cache,
-	mid_seas: sa.Small_Array(MAX_PATHS_TO_SEA, ^Sea_Cache),
+	sea:      ^Sea,
+	mid_seas: sa.Small_Array(MAX_PATHS_TO_SEA, ^Sea),
 }
 
 SEAS_STRINGS :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
 CANALS :: [?]Canal_Strings{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
-Canal_Lands: [CANALS_COUNT][2]^Land_Cache
+Canal_Lands: [CANALS_COUNT][2]^Land
 
 get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
 	for sea_string, sea_idx in SEAS_STRINGS {

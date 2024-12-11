@@ -1,35 +1,39 @@
-package main
+package oaaa
+
+Idle_Air_For_Player :: [len(Idle_Air_Unit_Type)]uint
+Idle_Land_For_Player :: [len(Idle_Land_Unit_Type)]uint
+Idle_Sea_For_Player :: [len(Idle_Sea_Unit_Type)]uint
 
 Game_State :: struct {
-	current_turn: int,
-	seed:         int,
-	money:        [PLAYERS_COUNT]int,
+	current_turn: uint,
+	seed:         uint,
+	money:        [PLAYERS_COUNT]uint,
 	land_state:   #soa[LANDS_COUNT]Land_State,
 	sea_state:    #soa[SEAS_COUNT]Sea_State,
 }
 
 Territory_State :: struct {
-	idle_air_units:   [PLAYERS_COUNT][len(Idle_Air_Unit_Type)]int,
+	idle_air_units:   [PLAYERS_COUNT]Idle_Air_For_Player,
 	active_air_units: [len(Active_Air_Unit_Type)]int,
 	skipped_moves:    [TERRITORIES_COUNT]int,
 	combat_status:    Combat_Status,
-	builds_left:      int,
+	builds_left:      uint,
 }
 
 Land_State :: struct {
 	using territory_state: Territory_State,
-	idle_land_units:       [PLAYERS_COUNT][len(Idle_Land_Unit_Type)]int,
-	active_land_units:     [len(Active_Land_Unit_Type)]int,
+	idle_land_units:       [PLAYERS_COUNT]Idle_Land_For_Player,
+	active_land_units:     [len(Active_Land_Unit_Type)]uint,
 	owner:                 int,
-	factory_damage:        int,
-	factory_max_damage:    int,
-	bombard_max_damage:    int,
+	factory_damage:        uint,
+	factory_max_damage:    uint,
+	bombard_max_damage:    uint,
 }
 
 Sea_State :: struct {
 	using territory_state: Territory_State,
-	idle_sea_units:        [PLAYERS_COUNT][len(Idle_Sea_Unit_Type)]int,
-	active_sea_units:      [len(Active_Sea_Unit_Type)]int,
+	idle_sea_units:        [PLAYERS_COUNT]Idle_Sea_For_Player,
+	active_sea_units:      [len(Active_Sea_Unit_Type)]uint,
 }
 
 Combat_Status :: enum {

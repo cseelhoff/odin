@@ -1,25 +1,25 @@
-package main
+package oaaa
 import sa "core:container/small_array"
 import "core:fmt"
 import "core:strings"
 
 MAX_VALID_MOVES :: 20
 
-Territory_Pointers :: [TERRITORIES_COUNT]^Territory_Cache
-SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory_Cache)
-SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land_Cache)
-SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player_Cache)
+Territory_Pointers :: [TERRITORIES_COUNT]^Territory
+SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory)
+SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land)
+SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
 
 Game_Cache :: struct {
 	teams:             Teams,
 	seas:              Seas,
 	lands:             Lands,
 	players:           Players,
-	//canal_paths:       Canal_Paths,
 	territories:       Territory_Pointers,
 	valid_moves:       sa.Small_Array(MAX_VALID_MOVES, uint),
-	unlucky_player:    ^Player_Cache,
-	//canal_state:       ^Canal_Path,
+	unlucky_player:    ^Player,
+	current_turn:      ^Player,
+	seed:              uint,
 	canal_state:       int,
 	step_id:           uint,
 	answers_remaining: uint,

@@ -1,8 +1,8 @@
-package main
+package oaaa
 
+import sa "core:container/small_array"
 import "core:fmt"
 import "core:strings"
-import sa "core:container/small_array"
 
 PLAYERS_COUNT :: len(PLAYER_STRINGS)
 
@@ -21,11 +21,12 @@ PLAYER_STRINGS := [?]Player_Strings {
 	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington"},
 }
 
-Players :: [PLAYERS_COUNT]Player_Cache
-Player_Cache :: struct {
-	factory_locations:  sa.Small_Array(LANDS_COUNT, ^Land_Cache),
-	captial_index:      ^Land_Cache,
-	team:               ^Team_Cache,
+Players :: [PLAYERS_COUNT]Player
+Player :: struct {
+	factory_locations:  sa.Small_Array(LANDS_COUNT, ^Land),
+	captial_index:      ^Land,
+	team:               ^Team,
+	money:              uint,
 	income_per_turn:    uint,
 	total_player_units: uint,
 	index:              int,
@@ -34,11 +35,11 @@ Player_Cache :: struct {
 TEAM_STRINGS := [?]string{"Allies", "Axis"}
 TEAMS_COUNT :: len(TEAM_STRINGS)
 
-Teams :: [TEAMS_COUNT]Team_Cache
-Team_Cache :: struct {
+Teams :: [TEAMS_COUNT]Team
+Team :: struct {
 	players:       SA_Player_Pointers,
 	enemy_players: SA_Player_Pointers,
-	enemy_team:    ^Team_Cache, // not an array, since assumption is 2 teams
+	enemy_team:    ^Team, // not an array, since assumption is 2 teams
 	is_allied:     [PLAYERS_COUNT]bool,
 }
 

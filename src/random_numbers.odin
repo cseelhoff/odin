@@ -1,4 +1,4 @@
-package main
+package oaaa
 
 import "core:math/rand"
 

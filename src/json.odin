@@ -1,4 +1,4 @@
-package main
+package oaaa
 
 import "core:encoding/json"
 import "core:fmt"

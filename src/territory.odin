@@ -1,14 +1,21 @@
-package main
+package oaaa
 import sa "core:container/small_array"
 import "core:mem"
 
 TERRITORIES_COUNT :: LANDS_COUNT + SEAS_COUNT
 MAX_TERRITORY_TO_LAND_CONNECTIONS :: 6
-SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land_Cache)
+MAX_AIR_TO_AIR_CONNECTIONS :: 7
+SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land)
+SA_Adjacent_Airs :: sa.Small_Array(MAX_AIR_TO_AIR_CONNECTIONS, ^Territory)
 
-Territory_Cache :: struct {
+Territory :: struct {
 	//air_distances:              [TERRITORIES_COUNT]uint,
 	name:                       string,
+	idle_air_units:             [PLAYERS_COUNT]Idle_Air_For_Player,
+	active_air_units:           [len(Active_Air_Unit_Type)]uint,
+	skipped_moves:              [TERRITORIES_COUNT]int,
+	combat_status:              Combat_Status,
+	builds_left:                uint,
 	territory_within_6_moves:   SA_Territory_Pointers,
 	territory_within_5_moves:   SA_Territory_Pointers,
 	territory_within_4_moves:   SA_Territory_Pointers,
@@ -24,6 +31,8 @@ Territory_Cache :: struct {
 	land_within_3_moves:        SA_Land_Pointers,
 	land_within_2_moves:        SA_Land_Pointers,
 	adjacent_lands:             SA_Adjacent_Lands,
+	adjacent_airs:							SA_Adjacent_Airs,
+	airs_2_moves_away:          SA_Territory_Pointers,
 	teams_unit_count:           [TEAMS_COUNT]uint,
 	territory_index:            int,
 	enemy_fighters_total:       uint,
@@ -83,16 +92,19 @@ initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_
 		// Set initial distances based on adjacent lands
 		for adjacent_land in sa.slice(&territory.adjacent_lands) {
 			distances[territory_index][adjacent_land.territory_index] = 1
+			territory.adjacent_airs.push(&adjacent_land.territory)
 		}
 	}
 	for &land in lands {
 		for adjacent_sea in sa.slice(&land.adjacent_seas) {
 			distances[land.territory_index][adjacent_sea.territory_index] = 1
+			land.adjacent_airs.push(&adjacent_sea.territory)
 		}
 	}
 	for &sea in seas {
 		for adjacent_sea in sa.slice(&sea.canal_paths[CANAL_STATES - 1].adjacent_seas) {
 			distances[sea.territory_index][adjacent_sea.territory_index] = 1
+			sea.adjacent_airs.push(&adjacent_sea.territory)
 		}
 	}
 	for mid_idx in 0 ..< TERRITORIES_COUNT {
@@ -102,6 +114,14 @@ initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_
 				if new_dist < distances[start_idx][end_idx] {
 					distances[start_idx][end_idx] = new_dist
 				}
+			}
+		}
+	}
+	// Initialize the airs_2_moves_away array
+	for air in airs {
+		for distance, dest_air_idx in distances[air.territory_index] {
+			if distance == 2 {
+				air.airs_2_moves_away.push(&airs[dest_air_idx])
 			}
 		}
 	}
