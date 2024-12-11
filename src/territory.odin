@@ -8,6 +8,7 @@ SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land_Cac
 
 Territory_Cache :: struct {
 	//air_distances:              [TERRITORIES_COUNT]uint,
+	name:                       string,
 	territory_within_6_moves:   SA_Territory_Pointers,
 	territory_within_5_moves:   SA_Territory_Pointers,
 	territory_within_4_moves:   SA_Territory_Pointers,
@@ -51,10 +52,12 @@ COASTAL_CONNECTIONS := [?]Coastal_Connection_String {
 
 initialize_territories :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
 	for &land, land_idx in lands {
+		land.land_index = land_idx
 		land.territory_index = land_idx
 		territories[land.territory_index] = &land.territory
 	}
 	for &sea, sea_idx in seas {
+		sea.sea_index = sea_idx
 		sea.territory_index = sea_idx + LANDS_COUNT
 		territories[sea.territory_index] = &sea.territory
 	}

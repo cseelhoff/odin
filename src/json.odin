@@ -30,12 +30,12 @@ save_json :: proc(game_state: Game_State) {
 	fmt.println("Done")
 }
 
-load_game_data :: proc(path: string, game_state: ^Game_State) {
+load_game_data :: proc(path: string, game_state: ^Game_State) -> (ok: bool) {
 	// Load in your json file!
-	data, ok := os.read_entire_file_from_filename(path)
-	if !ok {
+	data, read_ok := os.read_entire_file_from_filename(path)
+	if !read_ok {
 		fmt.eprintln("Failed to load the file!")
-		return
+		return false
 	}
 	defer delete(data) // Free the memory at the end
 
@@ -44,9 +44,10 @@ load_game_data :: proc(path: string, game_state: ^Game_State) {
 	if err != .None {
 		fmt.eprintln("Failed to parse the json file.")
 		fmt.eprintln("Error:", err)
-		return
+		return false
 	}
 	defer json.destroy_value(json_data)
 	local_game_state := game_state
 	json.unmarshal(data, game_state)
+	return true
 }

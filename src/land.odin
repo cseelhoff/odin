@@ -26,7 +26,7 @@ Land_Cache :: struct {
 	//land_path_blocked:     [LANDS_COUNT]bool,
 	original_owner:     ^Player_Cache,
 	value:              uint,
-	land_index:         uint,
+	land_index:         int,
 }
 
 Land_2_Moves_Away :: struct {
@@ -54,6 +54,9 @@ get_land_idx_from_string :: proc(land_name: string) -> (land_idx: int, ok: bool)
 	return 0, false
 }
 initialize_land_connections :: proc(lands: ^Lands) -> (ok: bool) {
+	for land, land_idx in LANDS_STRINGS {
+		lands[land_idx].name = land.name
+	}
 	for connection in LAND_CONNECTIONS {
 		land1_idx := get_land_idx_from_string(connection[0]) or_return
 		land2_idx := get_land_idx_from_string(connection[1]) or_return

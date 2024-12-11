@@ -25,7 +25,7 @@ Sea_Cache :: struct {
 	allied_carriers:                   uint,
 	transports_with_large_cargo_space: uint,
 	transports_with_small_cargo_space: uint,
-	sea_index:                         uint,
+	sea_index:                         int,
 	sea_path_blocked:                  bool,
 	sub_path_blocked:                  bool,
 }
@@ -59,6 +59,9 @@ get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
 	return 0, false
 }
 initialize_sea_connections :: proc(seas: ^Seas) -> (ok: bool) {
+	for sea_name, sea_idx in SEAS_STRINGS {
+		seas[sea_idx].name = sea_name
+	}
 	for connection in SEA_CONNECTIONS {
 		sea1_idx := get_sea_idx_from_string(connection[0]) or_return
 		sea2_idx := get_sea_idx_from_string(connection[1]) or_return
