@@ -62,24 +62,6 @@ get_user_move_input :: proc(
 	return 0
 }
 
-update_move_history_4air :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
-	// std::vector<uint>& valid_moves = state.cache.valid_moves;
-	// // get a list of newly skipped valid_actions
-	// while (true) {
-	//   uint valid_action = valid_moves.back();
-	//   if (valid_action == dst_air) {
-	//     break;
-	//   }
-	//   assert(valid_moves.size() > 0);
-	//   state.skipped_moves[src_air][valid_action] = true;
-	//   apply_skip(state, src_air, valid_action);
-	//   valid_moves.pop_back();
-	// }
-}
-
-clear_move_history ::proc(gc: ^Game_Cache) {
-}
-
 move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	refresh_occured: bool = false
@@ -188,12 +170,60 @@ refresh_can_bombers_land_here :: proc(gc: ^Game_Cache) {
 	// check if any bombers have full moves remaining
 	for &land in gc.lands {
 		// is allied owned and not recently conquered?
-		if gc.current_turn.team == land.owner.team &&
-		   land.combat_status == .NO_COMBAT {
+		if gc.current_turn.team == land.owner.team && land.combat_status == .NO_COMBAT {
 			bomber_can_land_here(&land)
 		}
 	}
 }
 
-add_valid_fighter_moves :: proc(gc: ^Game_Cache, territory: ^Territory) {
+add_valid_fighter_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
+	enemy_team_idx: int = gc.current_turn.team.enemy_team.index
+	for dst_air in sa.slice(&src_air.adjacent_airs) {
+		if !dst_air.can_fighter_land_here && dst_air.teams_unit_count[enemy_team_idx] == 0 { 	// waste of a move
+			continue
+		}
+		if !src_air.skipped_moves[dst_air.territory_index] {
+			sa.push(&gc.valid_moves, dst_air.territory_index)
+		}
+	}
+	for dst_air in sa.slice(&src_air.airs_2_moves_away) {
+		if !dst_air.can_fighter_land_here && dst_air.teams_unit_count[enemy_team_idx] == 0 { 	// waste of a move
+			continue
+		}
+		if !src_air.skipped_moves[dst_air.territory_index] {
+			sa.push(&gc.valid_moves, dst_air.territory_index)
+		}
+	}
+	for dst_air in sa.slice(&src_air.airs_3_moves_away) {
+		if dst_air.can_fighter_land_in_1_move {
+			if !dst_air.can_fighter_land_here && dst_air.teams_unit_count[enemy_team_idx] == 0 { 	// waste of a move
+				continue
+			}
+			if !src_air.skipped_moves[dst_air.territory_index] {
+				sa.push(&gc.valid_moves, dst_air.territory_index)
+			}
+		}
+	}
+	for dst_air in sa.slice(&src_air.airs_4_moves_away) {
+		if dst_air.can_fighter_land_here && !src_air.skipped_moves[dst_air.territory_index] {
+			sa.push(&gc.valid_moves, dst_air.territory_index)
+		}
+	}
+}
+
+update_move_history_4air :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
+	// get a list of newly skipped valid_actions
+	for {
+		assert(gc.valid_moves.len > 0)
+		valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
+		if (valid_action == dst_air.territory_index) {
+			break
+		}
+		src_air.skipped_moves[valid_action] = true
+		apply_skip(gc, src_air, valid_action)
+		valid_moves.pop_back();
+	}
+}
+
+clear_move_history :: proc(gc: ^Game_Cache) {
 }
