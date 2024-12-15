@@ -9,10 +9,10 @@ SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land)
 SA_Adjacent_Airs :: sa.Small_Array(MAX_AIR_TO_AIR_CONNECTIONS, ^Territory)
 
 Territory :: struct {
-	//air_distances:              [TERRITORIES_COUNT]uint,
 	name:                       string,
 	idle_air_units:             [PLAYERS_COUNT]Idle_Air_For_Player,
 	active_air_units:           [len(Active_Air_Unit_Type)]uint,
+	air_distances:              [TERRITORIES_COUNT]uint,
 	skipped_moves:              [TERRITORIES_COUNT]int,
 	combat_status:              Combat_Status,
 	builds_left:                uint,
@@ -31,7 +31,7 @@ Territory :: struct {
 	land_within_3_moves:        SA_Land_Pointers,
 	land_within_2_moves:        SA_Land_Pointers,
 	adjacent_lands:             SA_Adjacent_Lands,
-	adjacent_airs:							SA_Adjacent_Airs,
+	adjacent_airs:              SA_Adjacent_Airs,
 	airs_2_moves_away:          SA_Territory_Pointers,
 	teams_unit_count:           [TEAMS_COUNT]uint,
 	territory_index:            int,
@@ -83,45 +83,46 @@ initialize_costal_connections :: proc(lands: ^Lands, seas: ^Seas) -> (ok: bool) 
 }
 
 initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
-	distances: [TERRITORIES_COUNT][TERRITORIES_COUNT]uint
-	INFINITY :: 255
-	mem.set(&distances, INFINITY, len(distances))
-	for &territory, territory_index in territories {
+	for &terr, territory_index in territories {
+		INFINITY :: 255
+		mem.set(&terr.air_distances, INFINITY, TERRITORIES_COUNT)
 		// Ensure that the distance from a land to itself is 0
-		distances[territory_index][territory_index] = 0
+		terr.air_distances[territory_index] = 0
 		// Set initial distances based on adjacent lands
-		for adjacent_land in sa.slice(&territory.adjacent_lands) {
-			distances[territory_index][adjacent_land.territory_index] = 1
-			territory.adjacent_airs.push(&adjacent_land.territory)
+		for adjacent_land in sa.slice(&terr.adjacent_lands) {
+			terr.air_distances[adjacent_land.territory_index] = 1
+			terr.adjacent_airs.push(&adjacent_land.terr)
 		}
 	}
 	for &land in lands {
 		for adjacent_sea in sa.slice(&land.adjacent_seas) {
-			distances[land.territory_index][adjacent_sea.territory_index] = 1
+			land.air_distances[adjacent_sea.territory_index] = 1
 			land.adjacent_airs.push(&adjacent_sea.territory)
 		}
 	}
 	for &sea in seas {
 		for adjacent_sea in sa.slice(&sea.canal_paths[CANAL_STATES - 1].adjacent_seas) {
-			distances[sea.territory_index][adjacent_sea.territory_index] = 1
+			sea.air_distances[adjacent_sea.territory_index] = 1
 			sea.adjacent_airs.push(&adjacent_sea.territory)
 		}
 	}
 	for mid_idx in 0 ..< TERRITORIES_COUNT {
+		mid_air_dist := territories[mid_idx].air_distances
 		for start_idx in 0 ..< TERRITORIES_COUNT {
+			start_air_dist := territories[start_idx].air_distances
 			for end_idx in 0 ..< TERRITORIES_COUNT {
-				new_dist := distances[start_idx][mid_idx] + distances[mid_idx][end_idx]
-				if new_dist < distances[start_idx][end_idx] {
-					distances[start_idx][end_idx] = new_dist
+				new_dist := mid_air_dist[start_idx] + mid_air_dist[end_idx]
+				if new_dist < start_air_dist[end_idx] {
+					start_air_dist[end_idx] = new_dist
 				}
 			}
 		}
 	}
 	// Initialize the airs_2_moves_away array
-	for air in airs {
-		for distance, dest_air_idx in distances[air.territory_index] {
+	for &terr in territories {
+		for distance, dest_air_idx in terr.air_distances {
 			if distance == 2 {
-				air.airs_2_moves_away.push(&airs[dest_air_idx])
+				terr.airs_2_moves_away.push(&territories[dest_air_idx])
 			}
 		}
 	}

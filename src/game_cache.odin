@@ -16,7 +16,7 @@ Game_Cache :: struct {
 	lands:             Lands,
 	players:           Players,
 	territories:       Territory_Pointers,
-	valid_moves:       sa.Small_Array(MAX_VALID_MOVES, uint),
+	valid_moves:       sa.Small_Array(MAX_VALID_MOVES, int),
 	unlucky_player:    ^Player,
 	current_turn:      ^Player,
 	seed:              uint,
