@@ -11,6 +11,7 @@ SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land)
 SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
 
 Game_Cache :: struct {
+	state:             Game_State,
 	teams:             Teams,
 	seas:              Seas,
 	lands:             Lands,

@@ -37,6 +37,7 @@ TEAMS_COUNT :: len(TEAM_STRINGS)
 
 Teams :: [TEAMS_COUNT]Team
 Team :: struct {
+	index:				 int,
 	players:       SA_Player_Pointers,
 	enemy_players: SA_Player_Pointers,
 	enemy_team:    ^Team, // not an array, since assumption is 2 teams
@@ -55,6 +56,7 @@ get_player_idx_from_string :: proc(player_name: string) -> (player_idx: int, ok:
 
 initialize_teams :: proc(teams: ^Teams, players: ^Players) {
 	for &team, team_idx in teams {
+		team.index = team_idx
 		for &other_team in teams {
 			if &team != &other_team {
 				team.enemy_team = &other_team

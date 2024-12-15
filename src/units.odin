@@ -104,10 +104,7 @@ Active_Air_Unit_Type :: enum {
 	BOMBERS_AIR_0_MOVES_LEFT,
 }
 
-Active_Air_Unit_Set :: bit_set[Active_Air_Unit_Type]
-
-Is_Fighter :: Active_Air_Unit_Set {
-	.FIGHTERS_AIR_UNMOVED,
+Fighters_Expended_Moves := [?]Active_Air_Unit_Type {
 	.FIGHTERS_AIR_4_MOVES_LEFT,
 	.FIGHTERS_AIR_3_MOVES_LEFT,
 	.FIGHTERS_AIR_2_MOVES_LEFT,

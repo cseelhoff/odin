@@ -91,19 +91,19 @@ initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_
 		// Set initial distances based on adjacent lands
 		for adjacent_land in sa.slice(&terr.adjacent_lands) {
 			terr.air_distances[adjacent_land.territory_index] = 1
-			terr.adjacent_airs.push(&adjacent_land.terr)
+			sa.push(&terr.adjacent_airs, adjacent_land)
 		}
 	}
 	for &land in lands {
 		for adjacent_sea in sa.slice(&land.adjacent_seas) {
 			land.air_distances[adjacent_sea.territory_index] = 1
-			land.adjacent_airs.push(&adjacent_sea.territory)
+			sa.push(&land.adjacent_airs, adjacent_sea)
 		}
 	}
 	for &sea in seas {
 		for adjacent_sea in sa.slice(&sea.canal_paths[CANAL_STATES - 1].adjacent_seas) {
 			sea.air_distances[adjacent_sea.territory_index] = 1
-			sea.adjacent_airs.push(&adjacent_sea.territory)
+			sa.push(&sea.adjacent_airs, adjacent_sea)
 		}
 	}
 	for mid_idx in 0 ..< TERRITORIES_COUNT {
@@ -122,7 +122,7 @@ initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_
 	for &terr in territories {
 		for distance, dest_air_idx in terr.air_distances {
 			if distance == 2 {
-				terr.airs_2_moves_away.push(&territories[dest_air_idx])
+				sa.push(&terr.airs_2_moves_away, territories[dest_air_idx])
 			}
 		}
 	}
