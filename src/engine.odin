@@ -62,7 +62,9 @@ get_user_move_input :: proc(
 	// return getAIInput(state);
 	return 0
 }
-
+get_user_sea_move_input :: proc(gc: ^Game_Cache, unit: Active_Sea_Unit_Type, src_sea: ^Sea) -> (dst_sea_idx: int) {
+	return 0
+}
 add_move_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	if !src_air.skipped_moves[dst_air.territory_index] {
 		sa.push(&gc.valid_moves, dst_air.territory_index)

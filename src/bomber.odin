@@ -3,6 +3,14 @@ import sa "core:container/small_array"
 import "core:mem"
 import "core:slice"
 
+Bombers_Expended_Moves := [?]Active_Air_Unit_Type {
+	.BOMBERS_AIR_5_MOVES_LEFT,
+	.BOMBERS_AIR_4_MOVES_LEFT,
+	.BOMBERS_AIR_3_MOVES_LEFT,
+	.BOMBERS_AIR_2_MOVES_LEFT,
+	.BOMBERS_AIR_1_MOVES_LEFT,
+	.BOMBERS_AIR_0_MOVES_LEFT,
+}
 move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	refresh_occured := false
