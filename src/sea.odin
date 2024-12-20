@@ -32,11 +32,13 @@ Sea :: struct {
 	sub_path_blocked:                  bool,
 }
 
-Canal_Strings :: struct {
+Canal :: struct {
 	lands: [2]string,
 	seas:  [2]string,
 }
+
 Sea_Distances :: struct {
+	sea_distance: 		[SEAS_COUNT]uint,
 	seas_2_moves_away: Seas_2_Moves_Away,
 	adjacent_seas:     SA_Adjacent_S2S,
 }
@@ -48,7 +50,7 @@ Sea_2_Moves_Away :: struct {
 
 SEAS_STRINGS :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
-CANALS :: [?]Canal_Strings{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
+CANALS :: [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
 
 get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
@@ -118,6 +120,7 @@ initialize_seas_2_moves_away :: proc(seas: ^Seas) {
 			src_canal_path := &sea.canal_paths[canal_state]
 			adjacent_seas := sa.slice(&src_canal_path.adjacent_seas)
 			for distance, dest_sea_idx in distances[sea_idx] {
+				src_canal_path.sea_distance[dest_sea_idx] = distance
 				dest_sea := &seas[dest_sea_idx]
 				if distance == 2 {
 					dest := Sea_2_Moves_Away {

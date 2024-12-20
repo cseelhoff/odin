@@ -2,20 +2,35 @@ package oaaa
 import sa "core:container/small_array"
 import "core:mem"
 import "core:slice"
+
 Transports_Needing_Staging := [?]Active_Sea_Unit_Type {
 	.TRANS_EMPTY_UNMOVED,
 	.TRANS_1I_UNMOVED,
 	.TRANS_1A_UNMOVED,
 	.TRANS_1T_UNMOVED,
-	.TRANS_2I_UNMOVED,
 }
-Transports_Done_Staging := [?]Active_Sea_Unit_Type{
-	int(Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED) = Active_Sea_Unit_Type.TRANS_EMPTY_0_MOVES_LEFT,
-	int(Active_Sea_Unit_Type.TRANS_1I_UNMOVED)    = Active_Sea_Unit_Type.TRANS_1I_0_MOVES_LEFT,
-	int(Active_Sea_Unit_Type.TRANS_1A_UNMOVED)    = Active_Sea_Unit_Type.TRANS_1A_0_MOVES_LEFT,
-	int(Active_Sea_Unit_Type.TRANS_1T_UNMOVED)    = Active_Sea_Unit_Type.TRANS_1T_0_MOVES_LEFT,
-	int(Active_Sea_Unit_Type.TRANS_2I_UNMOVED)    = Active_Sea_Unit_Type.TRANS_2I_0_MOVES_LEFT,
+
+Transports_After_Prestage_0_Moves := [?]Active_Sea_Unit_Type {
+	Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_2_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1I_UNMOVED    = .TRANS_1I_2_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1A_UNMOVED    = .TRANS_1A_2_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = .TRANS_1T_2_MOVES_LEFT,
 }
+
+Transports_After_Prestage_1_Move := [?]Active_Sea_Unit_Type {
+	Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_1_MOVE_LEFT,
+	Active_Sea_Unit_Type.TRANS_1I_UNMOVED    = .TRANS_1I_1_MOVE_LEFT,
+	Active_Sea_Unit_Type.TRANS_1A_UNMOVED    = .TRANS_1A_1_MOVE_LEFT,
+	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = .TRANS_1T_1_MOVE_LEFT,
+}
+
+Transports_After_Prestage_2_Moves := [?]Active_Sea_Unit_Type {
+	Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_0_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1I_UNMOVED    = .TRANS_1I_0_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1A_UNMOVED    = .TRANS_1A_0_MOVES_LEFT,
+	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = .TRANS_1T_0_MOVES_LEFT,
+}
+
 TRANSPORT_MOVES_MAX :: 2
 stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
@@ -40,8 +55,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				dst_air := gc.territories[dst_air_idx]
 				update_move_history_2sea(gc, &src_sea, dst_air)
 				dst_sea_idx := dst_air_idx - len(gc.lands)
-				sea_distance :=
-					src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
+				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 				dst_sea := gc.seas[dst_sea_idx]
 				if (dst_sea.enemy_blockade_total > 0) {
 					dst_air.combat_status = .PRE_COMBAT
@@ -49,7 +63,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				}
 				if (src_sea == dst_sea) {
 					src_sea.active_sea_units[unit] -= 1
-          sea_units.at(done_staging) += unmoved_sea_units
+					sea_units.at(done_staging) += unmoved_sea_units
 					unmoved_sea_units = 0
 					break
 				}

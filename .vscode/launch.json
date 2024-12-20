@@ -7,16 +7,8 @@
           "request": "launch",
           "program": "${workspaceFolder}/bin/main",
           "args": [],
-          "stopAtEntry": false,
           "cwd": "${workspaceFolder}",
-          "environment": [],
-          "externalConsole": false,
-          "preLaunchTask": "build",
-          "logging": {
-              "trace": true,
-              "traceResponse": true,
-              "engineLogging": true
-          }
+          "preLaunchTask": "build"
       }
   ]
 }
