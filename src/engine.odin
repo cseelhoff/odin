@@ -70,23 +70,18 @@ add_move_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^
 		sa.push(&gc.valid_moves, dst_air.territory_index)
 	}
 }
-update_move_history_4air :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
+
+update_move_history :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air_idx: int) {
 	// get a list of newly skipped valid_actions
+	assert(gc.valid_moves.len > 0)
+	valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
 	for {
-		assert(gc.valid_moves.len > 0)
-		valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
-		if (valid_action == dst_air.territory_index) {
+		if (valid_action == dst_air_idx) {
 			break
 		}
 		src_air.skipped_moves[valid_action] = true
 		apply_skip(gc, src_air, gc.territories[valid_action])
-		sa.pop_back(&gc.valid_moves)
-	}
-}
-
-clear_move_history :: proc(gc: ^Game_Cache) {
-	for territory in gc.territories {
-		mem.zero_slice(territory.skipped_moves[:])
+		valid_action = sa.pop_back(&gc.valid_moves)
 	}
 }
 
@@ -95,5 +90,11 @@ apply_skip :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 		if skipped_move {
 			src_air.skipped_moves[src_air_idx] = true
 		}
+	}
+}
+
+clear_move_history :: proc(gc: ^Game_Cache) {
+	for territory in gc.territories {
+		mem.zero_slice(territory.skipped_moves[:])
 	}
 }

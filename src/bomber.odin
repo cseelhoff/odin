@@ -13,15 +13,15 @@ Bombers_Expended_Moves := [?]Active_Air_Unit_Type {
 }
 move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
-	refresh_occured := false
-	enemy_team_idx: int = gc.current_turn.team.enemy_team.index
+	clear_needed := false
+	defer if(clear_needed) { clear_move_history(gc) }
 	for src_air in gc.territories {
 		if (src_air.active_air_units[Active_Air_Unit_Type.BOMBERS_AIR_UNMOVED] == 0) {
 			continue
 		}
-		if (!refresh_occured) {
+		if (!clear_needed) {
 			refresh_can_bombers_land_here(gc)
-			refresh_occured = true
+			clear_needed = true
 		}
 		sa.resize(&gc.valid_moves, 1)
 		gc.valid_moves.data[0] = src_air.territory_index
@@ -35,9 +35,9 @@ move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				dst_air_idx = get_user_move_input(gc, .BOMBERS_AIR_UNMOVED, src_air)
 			}
 			dst_air := gc.territories[dst_air_idx]
-			update_move_history_4air(gc, src_air, dst_air) //maybe 6air?
+			update_move_history(gc, src_air, dst_air_idx)
 			airDistance := src_air.air_distances[dst_air_idx]
-			if (dst_air.teams_unit_count[enemy_team_idx] > 0) {
+			if (dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0) {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
 				airDistance = 6 // Maximum move for bombers
@@ -51,9 +51,6 @@ move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			// total_player_units_player.at(src_air) -= 1
 			src_air.teams_unit_count[gc.current_turn.team.index] -= 1
 		}
-	}
-	if (refresh_occured) {
-		clear_move_history(gc)
 	}
 	return true
 }

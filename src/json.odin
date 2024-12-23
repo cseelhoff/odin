@@ -21,8 +21,8 @@ save_json :: proc(game_state: Game_State) {
 
 	fmt.printfln("%s", json_data)
 	fmt.printfln("Writing: %s", path)
-	werr := os.write_entire_file_or_err(path, json_data)
-	if werr != nil {
+	werr := os.write_entire_file(path, json_data)
+	if werr != false {
 		fmt.eprintfln("Unable to write file: %v", werr)
 		os.exit(1)
 	}

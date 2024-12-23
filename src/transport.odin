@@ -1,5 +1,6 @@
 package oaaa
 import sa "core:container/small_array"
+import "core:fmt"
 import "core:mem"
 import "core:slice"
 
@@ -31,11 +32,28 @@ Transports_After_Prestage_2_Moves := [?]Active_Sea_Unit_Type {
 	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = .TRANS_1T_0_MOVES_LEFT,
 }
 
+Transports_With_Large_Cargo_Space := [?]bool {
+	Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED = true,
+	Active_Sea_Unit_Type.TRANS_1I_UNMOVED    = true,
+	Active_Sea_Unit_Type.TRANS_1A_UNMOVED    = false,
+	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = false,
+}
+
+Idle_Sea_From_Active := [?]Idle_Sea_Unit_Type {
+	Active_Sea_Unit_Type.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY,
+	Active_Sea_Unit_Type.TRANS_1I_UNMOVED    = .TRANS_1I,
+	Active_Sea_Unit_Type.TRANS_1A_UNMOVED    = .TRANS_1A,
+	Active_Sea_Unit_Type.TRANS_1T_UNMOVED    = .TRANS_1T,
+}
+
 TRANSPORT_MOVES_MAX :: 2
 stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
+	player_idx := gc.current_turn.index
+	team_idx := gc.current_turn.team.index
 	for unit in Transports_Needing_Staging {
 		clear_needed := false
+		defer if (clear_needed) {clear_move_history(gc)}
 		for &src_sea in gc.seas {
 			if (src_sea.active_sea_units[unit] == 0) {
 				continue
@@ -43,7 +61,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			clear_needed = true
 			sa.resize(&gc.valid_moves, 1)
 			gc.valid_moves.data[0] = src_sea.territory_index
-			add_valid_transport_moves(gc, &src_sea, 2)
+			add_valid_sea_moves(gc, &src_sea, 2)
 			for src_sea.active_sea_units[unit] > 0 {
 				dst_air_idx := gc.valid_moves.data[0]
 				if (gc.valid_moves.len > 1) {
@@ -53,7 +71,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					dst_air_idx = get_user_sea_move_input(gc, unit, &src_sea)
 				}
 				dst_air := gc.territories[dst_air_idx]
-				update_move_history_2sea(gc, &src_sea, dst_air)
+				update_move_history(gc, &src_sea.territory, dst_air_idx)
 				dst_sea_idx := dst_air_idx - len(gc.lands)
 				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 				dst_sea := gc.seas[dst_sea_idx]
@@ -61,35 +79,58 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					dst_air.combat_status = .PRE_COMBAT
 					sea_distance = TRANSPORT_MOVES_MAX
 				}
-				if (src_sea == dst_sea) {
-					src_sea.active_sea_units[unit] -= 1
-					sea_units.at(done_staging) += unmoved_sea_units
-					unmoved_sea_units = 0
+				unit_after_move: Active_Sea_Unit_Type
+				switch (sea_distance) {
+				case 0:
+					src_sea.active_sea_units[Transports_After_Prestage_0_Moves[unit]] +=
+						src_sea.active_sea_units[unit]
+					src_sea.active_sea_units[unit] = 0
 					break
+				case 1:
+					unit_after_move = Transports_After_Prestage_1_Move[unit]
+				case 2:
+					unit_after_move = Transports_After_Prestage_2_Moves[unit]
+				case:
+					fmt.eprintln("Error: Invalid sea_distance: %d\n", sea_distance)
+					return false
 				}
-				active_transports->at(dst_sea)[staging_state - 1 - sea_distance] += 1
-				idle_sea_transports[dst_sea] += 1
-				total_player_units.at(dst_air) += 1
-				team_units_count_team.at(dst_air) += 1
-				transports_with_small_cargo_space.at(dst_sea) += 1
-				unmoved_sea_units -= 1
-				idle_sea_transports[src_sea] -= 1
-				total_player_units.at(src_air) -= 1
-				team_units_count_team.at(src_air) -= 1
-				transports_with_small_cargo_space[src_sea] -= 1
-				if (unit <= TRANS1I) {
-					transports_with_large_cargo_space[src_sea] -= 1
-					transports_with_large_cargo_space[dst_sea] += 1
+				dst_sea.active_sea_units[unit_after_move] += 1
+				dst_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[unit_after_move]] += 1
+				dst_sea.teams_unit_count[team_idx] += 1
+				dst_sea.transports_with_small_cargo_space += 1
+				if (Transports_With_Large_Cargo_Space[unit]) {
+					dst_sea.transports_with_large_cargo_space += 1
+					src_sea.transports_with_large_cargo_space -= 1
 				}
+				src_sea.active_sea_units[unit] -= 1
+				src_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[unit]] -= 1
+				src_sea.teams_unit_count[team_idx] -= 1
+				src_sea.transports_with_small_cargo_space -= 1
 			}
 		}
-		if (clear_needed) {
-			clear_move_history(gc)
+	}
+	return true
+}
+
+add_valid_sea_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
+	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+		if (src_sea.skipped_moves[dst_sea.territory_index]) {
+			continue
 		}
-		return false
+		sa.push(&gc.valid_moves, dst_sea.territory_index)
+	}
+	if max_distance == 1 {
+		return
+	}
+	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index]) {
+			continue
+		}
+		for mid_sea in sa.slice(&dst_sea_2_away.mid_seas) {
+			if (!mid_sea.sea_path_blocked) {
+				sa.push(&gc.valid_moves, dst_sea_2_away.sea.territory_index)
+				break
+			}
+		}		
 	}
 }
-update_move_history_2sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air: ^Territory) {
-	return
-}
-add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {}
