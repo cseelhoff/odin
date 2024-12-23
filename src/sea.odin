@@ -17,19 +17,17 @@ Canal_Paths :: [CANAL_STATES]Sea_Distances
 Seas_2_Moves_Away :: sa.Small_Array(SEAS_COUNT, Sea_2_Moves_Away)
 
 Sea :: struct {
-	using territory:                   Territory,
-	idle_sea_units:                    [PLAYERS_COUNT]Idle_Sea_For_Player,
-	active_sea_units:                  [len(Active_Sea_Unit_Type)]uint,
-	canal_paths:                       Canal_Paths,
-	enemy_destroyers_total:            uint,
-	enemy_submarines_total:            uint,
-	enemy_blockade_total:              uint,
-	allied_carriers:                   uint,
-	transports_with_large_cargo_space: uint,
-	transports_with_small_cargo_space: uint,
-	sea_index:                         int,
-	sea_path_blocked:                  bool,
-	sub_path_blocked:                  bool,
+	using territory:        Territory,
+	idle_sea_units:         [PLAYERS_COUNT]Idle_Sea_For_Player,
+	active_sea_units:       [len(Active_Sea_Unit_Type)]uint,
+	canal_paths:            Canal_Paths,
+	enemy_destroyers_total: uint,
+	enemy_submarines_total: uint,
+	enemy_blockade_total:   uint,
+	allied_carriers:        uint,
+	sea_index:              int,
+	sea_path_blocked:       bool,
+	sub_path_blocked:       bool,
 }
 
 Canal :: struct {
@@ -38,7 +36,7 @@ Canal :: struct {
 }
 
 Sea_Distances :: struct {
-	sea_distance: 		[SEAS_COUNT]uint,
+	sea_distance:      [SEAS_COUNT]uint,
 	seas_2_moves_away: Seas_2_Moves_Away,
 	adjacent_seas:     SA_Adjacent_S2S,
 }

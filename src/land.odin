@@ -27,15 +27,21 @@ Land :: struct {
 	factory_max_damage: uint,
 	bombard_max_damage: uint,
 	lands_2_moves_away: sa.Small_Array(LANDS_COUNT, Land_2_Moves_Away),
-	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, Sea_2_Moves_Away),
+	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,
 	original_owner:     ^Player,
 	value:              uint,
+	land_distances:		 [LANDS_COUNT]uint,
 	land_index:         int,
 }
 
 Land_2_Moves_Away :: struct {
 	land:      ^Land,
+	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
+}
+
+L2S_2_Moves_Away :: struct {
+	sea:      ^Sea,
 	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
 }
 

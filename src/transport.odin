@@ -60,10 +60,10 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			}
 			clear_needed = true
 			sa.resize(&gc.valid_moves, 1)
-			gc.valid_moves.data[0] = src_sea.territory_index
+			dst_air_idx := src_sea.territory_index
+			gc.valid_moves.data[0] = dst_air_idx
 			add_valid_sea_moves(gc, &src_sea, 2)
 			for src_sea.active_sea_units[unit] > 0 {
-				dst_air_idx := gc.valid_moves.data[0]
 				if (gc.valid_moves.len > 1) {
 					if (gc.answers_remaining == 0) {
 						return true
@@ -97,15 +97,9 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				dst_sea.active_sea_units[unit_after_move] += 1
 				dst_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[unit_after_move]] += 1
 				dst_sea.teams_unit_count[team_idx] += 1
-				dst_sea.transports_with_small_cargo_space += 1
-				if (Transports_With_Large_Cargo_Space[unit]) {
-					dst_sea.transports_with_large_cargo_space += 1
-					src_sea.transports_with_large_cargo_space -= 1
-				}
 				src_sea.active_sea_units[unit] -= 1
 				src_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[unit]] -= 1
 				src_sea.teams_unit_count[team_idx] -= 1
-				src_sea.transports_with_small_cargo_space -= 1
 			}
 		}
 	}

@@ -24,10 +24,10 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			clear_needed = true
 		}
 		sa.resize(&gc.valid_moves, 1)
-		gc.valid_moves.data[0] = src_air.territory_index
+		dst_air_idx = src_air.territory_index
+		gc.valid_moves.data[0] = dst_air_idx
 		add_valid_fighter_moves(gc, src_air)
 		for src_air.active_air_units[Active_Air_Unit_Type.FIGHTERS_AIR_UNMOVED] > 0 {
-			dst_air_idx := gc.valid_moves.data[0]
 			if (gc.valid_moves.len > 1) {
 				if (gc.answers_remaining == 0) {
 					return true

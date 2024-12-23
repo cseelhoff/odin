@@ -14,8 +14,8 @@ Game_State :: struct {
 
 Territory_State :: struct {
 	idle_air_units:   [PLAYERS_COUNT]Idle_Air_For_Player,
-	active_air_units: [len(Active_Air_Unit_Type)]int,
-	skipped_moves:    [TERRITORIES_COUNT]int,
+	active_air_units: [len(Active_Air_Unit_Type)]uint,
+	skipped_moves:    [TERRITORIES_COUNT]bool,
 	combat_status:    Combat_Status,
 	builds_left:      uint,
 }
