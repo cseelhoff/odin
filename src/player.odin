@@ -4,17 +4,18 @@ import sa "core:container/small_array"
 import "core:fmt"
 import "core:strings"
 
-PLAYERS_COUNT :: len(PLAYER_STRINGS)
+PLAYERS_COUNT :: len(PLAYER_DATA)
 
-Player_Strings :: struct {
-	name:    string,
-	team:    string,
-	color:   string,
-	capital: string,
+Player_Data :: struct {
+	name:     string,
+	team:     string,
+	color:    string,
+	capital:  string,
+	is_human: bool,
 }
 
-PLAYER_STRINGS := [?]Player_Strings {
-	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow"},
+PLAYER_DATA := [?]Player_Data {
+	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow", is_human = true},
 	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin"},
 	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London"},
 	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
@@ -37,7 +38,7 @@ TEAMS_COUNT :: len(TEAM_STRINGS)
 
 Teams :: [TEAMS_COUNT]Team
 Team :: struct {
-	index:				 int,
+	index:         int,
 	players:       SA_Player_Pointers,
 	enemy_players: SA_Player_Pointers,
 	enemy_team:    ^Team, // not an array, since assumption is 2 teams
@@ -45,7 +46,7 @@ Team :: struct {
 }
 
 get_player_idx_from_string :: proc(player_name: string) -> (player_idx: int, ok: bool) {
-	for player, player_idx in PLAYER_STRINGS {
+	for player, player_idx in PLAYER_DATA {
 		if strings.compare(player.name, player_name) == 0 {
 			return player_idx, true
 		}
@@ -64,7 +65,7 @@ initialize_teams :: proc(teams: ^Teams, players: ^Players) {
 			}
 		}
 		for &player, player_idx in players {
-			if strings.compare(PLAYER_STRINGS[player_idx].team, TEAM_STRINGS[team_idx]) == 0 {
+			if strings.compare(PLAYER_DATA[player_idx].team, TEAM_STRINGS[team_idx]) == 0 {
 				sa.push(&team.players, &player)
 				team.is_allied[player_idx] = true
 				player.team = &team

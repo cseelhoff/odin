@@ -32,7 +32,7 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				if (gc.answers_remaining == 0) {
 					return true
 				}
-				dst_air_idx = get_user_move_input(gc, .FIGHTERS_AIR_UNMOVED, src_air)
+				dst_air_idx = get_move_input(gc, .FIGHTERS_AIR_UNMOVED, src_air)
 			}
 			dst_air := gc.territories[dst_air_idx]
 			update_move_history(gc, src_air, dst_air_idx)

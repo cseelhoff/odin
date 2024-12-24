@@ -24,7 +24,7 @@ Game_Cache :: struct {
 	canal_state:       int,
 	step_id:           uint,
 	answers_remaining: uint,
-	selected_action:   uint,
+	selected_action:   int,
 	max_loops:         uint,
 	actually_print:    bool,
 }
