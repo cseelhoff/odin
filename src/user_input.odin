@@ -2,51 +2,18 @@ package oaaa
 import sa "core:container/small_array"
 import "core:fmt"
 import "core:os"
+import "core:slice"
 import "core:strconv"
 
-get_move_input_air :: proc(
+get_move_input :: proc(
 	gc: ^Game_Cache,
-	unit: Active_Air_Unit_Type,
+	unit_name: string,
 	src_air: ^Territory,
 ) -> (
 	dst_air_idx: int,
 ) {
 	if (PLAYER_DATA[gc.current_turn.index].is_human) {
-		fmt.print("Moving ", Air_Unit_Names[unit], " From ", src_air.name, " Valid Moves: ")
-		for valid_move in sa.slice(&gc.valid_moves) {
-			fmt.print(gc.territories[valid_move].name, ", ")
-		}
-		return get_user_input(gc)
-	}
-	return get_ai_input(gc)
-}
-
-get_move_input_land :: proc(
-	gc: ^Game_Cache,
-	unit: Active_Land_Unit_Type,
-	src_air: ^Territory,
-) -> (
-	dst_air_idx: int,
-) {
-	if (PLAYER_DATA[gc.current_turn.index].is_human) {
-		fmt.print("Moving ", Land_Unit_Names[unit], " From ", src_air.name, " Valid Moves: ")
-		for valid_move in sa.slice(&gc.valid_moves) {
-			fmt.print(gc.territories[valid_move].name, ", ")
-		}
-		return get_user_input(gc)
-	}
-	return get_ai_input(gc)
-}
-
-get_move_input_sea :: proc(
-	gc: ^Game_Cache,
-	unit: Active_Sea_Unit_Type,
-	src_air: ^Territory,
-) -> (
-	dst_air_idx: int,
-) {
-	if (PLAYER_DATA[gc.current_turn.index].is_human) {
-		fmt.print("Moving ", Sea_Unit_Names[unit], " From ", src_air.name, " Valid Moves: ")
+		fmt.print("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
 		for valid_move in sa.slice(&gc.valid_moves) {
 			fmt.print(gc.territories[valid_move].name, ", ")
 		}
@@ -58,18 +25,32 @@ get_move_input_sea :: proc(
 get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
 	buffer: [256]byte
 	fmt.print("Enter a number between 0 and 255: ")
-	n := os.read(os.stdin, buffer[:]) or_return
-	input_str := string(buf[:n])
-	int_input := strconv.atoi(input_str) or_return
-	sa.linear_search(&gc.valid_moves, int_input) or_return
+	n, err := os.read(os.stdin, buffer[:])
+	if err != 0 {
+		return
+	}
+	input_str := string(buffer[:n])
+	int_input := strconv.atoi(input_str)
+	_, found := slice.linear_search(sa.slice(&gc.valid_moves), int_input)
+    if !found {
+        fmt.eprint("Invalid input " , int_input, "\n")
+        return
+    }
 	return int_input
 }
 
 get_ai_input :: proc(gc: ^Game_Cache) -> (ai_input: int) {
 	gc.answers_remaining -= 1
-	ai_input = gc.valid_moves[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.size()]
-	gc.seed += 1
-	if (gc.selected_action >= ACTION_COUNT) do return
-	sa.linear_search(&gc.valid_moves, gc.selected_action) or_return
+	if (gc.selected_action >= ACTION_COUNT) {
+        fmt.eprint("Invalid input ", gc.selected_action, "\n")
+        gc.seed += 1
+        return gc.valid_moves.data[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.len]
+    }
+	_, found := slice.linear_search(sa.slice(&gc.valid_moves), gc.selected_action)
+    if !found {
+        fmt.eprint("Invalid input ", gc.selected_action, "\n")
+        gc.seed += 1
+        return gc.valid_moves.data[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.len]
+    }
 	return gc.selected_action
 }
