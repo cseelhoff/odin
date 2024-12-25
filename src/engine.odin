@@ -71,9 +71,8 @@ clear_move_history :: proc(gc: ^Game_Cache) {
 
 move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
-	player_idx := gc.current_turn.index
 	team := gc.current_turn.team
-	enemy_team_idx := gc.current_turn.team.enemy_team.index
+	enemy_team_idx := team.enemy_team.index
 	clear_needed := false
 	defer if (clear_needed) {clear_move_history(gc)}
 	for &src_land, src_land_idx in gc.lands {
@@ -132,19 +131,41 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] = 0
 				break
 			case 1:
-				dst_land.active_land_units[Active_Land_Unit.TANKS_1_MOVE_LEFT] += 1
+				move_land_unit(
+					&dst_land,
+					.TANKS_1_MOVE_LEFT,
+					gc.current_turn,
+					.TANKS_UNMOVED,
+					&src_land,
+				)
 			case 2:
-				dst_land.active_land_units[Active_Land_Unit.TANKS_0_MOVES_LEFT] += 1
+				move_land_unit(
+					&dst_land,
+					.TANKS_0_MOVES_LEFT,
+					gc.current_turn,
+					.TANKS_UNMOVED,
+					&src_land,
+				)
 			}
-			dst_land.idle_land_units[player_idx][Idle_Land_Unit.TANKS] += 1
-			dst_land.teams_unit_count[team.index] += 1
-			src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] -= 1
-			src_land.idle_land_units[player_idx][Idle_Land_Unit.TANKS] -= 1
-			src_land.teams_unit_count[team.index] -= 1
-			src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] -= 1
 		}
 	}
 	return true
+}
+
+move_land_unit :: proc(
+	dst_land: ^Land,
+	dst_unit: Active_Land_Unit,
+	player: ^Player,
+	src_unit: Active_Land_Unit,
+	src_land: ^Land,
+) {
+	dst_land.active_land_units[dst_unit] += 1
+	dst_land.idle_land_units[player.index][Idle_Land_From_Active[dst_unit]] += 1
+	dst_land.teams_unit_count[player.team.index] += 1
+	src_land.active_land_units[src_unit] -= 1
+	src_land.idle_land_units[player.index][Idle_Land_From_Active[dst_unit]] -= 1
+	src_land.teams_unit_count[player.team.index] -= 1
+	src_land.active_land_units[src_unit] -= 1
 }
 
 add_valid_sea_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
