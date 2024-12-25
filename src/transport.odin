@@ -184,3 +184,17 @@ load_large_transport :: proc(
 		}
 	}
 }
+
+load_small_transport :: proc(
+	gc: ^Game_Cache,
+	active_land_unit: Active_Land_Unit,
+	src_land: ^Land,
+	dst_sea: ^Sea,
+) {
+	for transport in Transport_Load_Small {
+		if dst_sea.active_sea_units[transport] > 0 {
+			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_land_unit)
+			return
+		}
+	}
+}
