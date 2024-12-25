@@ -123,7 +123,7 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 						break
 					}
 				}
-				conquer_land(gc, dst_air)
+				conquer_land(gc, &dst_land)
 			}
 			switch (landDistance) {
 			case 0:
@@ -170,21 +170,22 @@ add_valid_sea_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
 
 add_valid_tank_2_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	// check for moving from land to land (two moves away)
+	enemy_team_idx := gc.current_turn.team.enemy_team.index
 	for dst_land in sa.slice(&src_land.lands_2_moves_away) {
-		if (src_land.skipped_moves[dst_land.territory_index]) do continue
-		sa.push(&gc.valid_moves, dst_land.territory_index)
+		if (src_land.skipped_moves[dst_land.land.territory_index]) do continue
+		sa.push(&gc.valid_moves, dst_land.land.territory_index)
 	}
 	// check for moving from land to sea (two moves away)
-	for (dst_sea in sa.slice(&src_land.seas_2_moves_away)) {
-		idle_sea_units := dst_sea.sea.idle_sea_units[gc.current_turn.index]
-		if (idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0) { 	// assume large, only tanks move 2
+	for &dst_sea_2_away in sa.slice(&src_land.seas_2_moves_away) {
+		idle_sea_units := dst_sea_2_away.sea.idle_sea_units[gc.current_turn.index]
+		if (idle_sea_units[Idle_Sea_Unit.TRANS_EMPTY] == 0 &&
+			   idle_sea_units[Idle_Sea_Unit.TRANS_1I] == 0) { 	// assume large, only tanks move 2
 			continue
 		}
-		if (src_land.skipped_moves[dst_sea.territory_index]) do continue
-		for mid_land in sa.slice(&dst_sea.mid_lands) {
-			if (!mid_land.land_path_blocked) {
-				sa.push(&gc.valid_moves, dst_sea.territory_index)
+		if (src_land.skipped_moves[dst_sea_2_away.sea.territory_index]) do continue
+		for mid_land in sa.slice(&dst_sea_2_away.mid_lands) {
+			if mid_land.teams_unit_count[enemy_team_idx] == 0 {
+				sa.push(&gc.valid_moves, dst_sea_2_away.sea.territory_index)
 				break
 			}
 		}
@@ -199,13 +200,13 @@ add_valid_large_land_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_sea_units := dst_sea.sea.idle_sea_units[gc.current_turn.index]
-		if (idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0) { 	// large
+		idle_sea_units := dst_sea.idle_sea_units[gc.current_turn.index]
+		if (idle_sea_units[Idle_Sea_Unit.TRANS_EMPTY] == 0 &&
+			   idle_sea_units[Idle_Sea_Unit.TRANS_1I] == 0) { 	// large
 			continue
 		}
 		if (!src_land.skipped_moves[dst_sea.territory_index]) {
-			valid_moves.push_back(dst_air)
+			sa.push(&gc.valid_moves, dst_sea.territory_index)
 		}
 	}
 }
@@ -217,44 +218,44 @@ add_valid_infantry_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_sea_units := dst_sea.sea.idle_sea_units[gc.current_turn.index]
-		if (idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.Idle_Sea_Unit] == 0) { 	// small
+		idle_sea_units := dst_sea.idle_sea_units[gc.current_turn.index]
+		if (idle_sea_units[Idle_Sea_Unit.TRANS_EMPTY] == 0 &&
+			   idle_sea_units[Idle_Sea_Unit.TRANS_1I] == 0 &&
+			   idle_sea_units[Idle_Sea_Unit.TRANS_1A] == 0 &&
+			   idle_sea_units[Idle_Sea_Unit.TRANS_1T] == 0) { 	// small
 			continue
 		}
 		if (!src_land.skipped_moves[dst_sea.territory_index]) {
-			valid_moves.push_back(dst_air)
+			sa.push(&gc.valid_moves, dst_sea.territory_index)
 		}
 	}
 }
 
-load_unit :: proc(
-	src_land: ^Land,
-	dst_sea: ^Sea,
-	active_transport: Active_Sea_Unit,
-	player_idx: int,
-	active_land_unit: Active_Land_Unit,
-) {
-	idle_land_unit := Idle_Land_From_Active[active_land_unit]
-	new_active_transport := Transport_Load_Unit[idle_land_unit][active_transport]
-	dst_sea.active_sea_units[new_active_transport] += 1
-	dst_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[new_active_transport]] += 1
-	src_land.active_land_units[active_land_unit] -= 1
-	src_land.idle_land_units[player_idx][idle_land_unit] -= 1
-}
-
-load_large_transport :: proc(
-	gc: ^Game_Cache,
-	active_land_unit: Active_Land_Unit,
-	src_land: ^Land,
-	dst_sea: ^Sea,
-) {
-	for transport in Transport_Load_Large {
-		if dst_sea.active_sea_units[transport] > 0 {
-			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_land_unit)
-			return
-		}
+conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
+	player_idx := gc.current_turn.index
+	team := gc.current_turn.team
+	enemy_team_idx := gc.current_turn.team.enemy_team.index
+	old_owner := dst_land.owner
+	if old_owner.captial.territory_index == dst_land.territory_index {
+		gc.current_turn.money += old_owner.money
+		old_owner.money = 0
 	}
+	old_owner.income_per_turn -= dst_land.value
+	new_owner := gc.current_turn
+	if team.is_allied[dst_land.original_owner.index] {
+		new_owner = dst_land.original_owner
+	}
+	dst_land.owner = new_owner
+	new_owner.income_per_turn += dst_land.value
+	if dst_land.factory_max_damage == 0 {
+		return
+	}
+	sa.push(&new_owner.factory_locations, dst_land)
+	index, found := slice.linear_search(sa.slice(&old_owner.factory_locations), dst_land)
+	if !found {
+		fmt.eprint("factory conquered, but not found in owned factory locations")
+		return false
+	}
+	sa.unordered_remove(&old_owner.factory_locations, index)
+	return true
 }

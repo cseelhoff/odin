@@ -25,7 +25,7 @@ PLAYER_DATA := [?]Player_Data {
 Players :: [PLAYERS_COUNT]Player
 Player :: struct {
 	factory_locations:  sa.Small_Array(LANDS_COUNT, ^Land),
-	captial_index:      ^Land,
+	captial:      ^Land,
 	team:               ^Team,
 	money:              uint,
 	income_per_turn:    uint,

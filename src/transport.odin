@@ -118,7 +118,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					if (gc.answers_remaining == 0) {
 						return true
 					}
-					dst_air_idx = get_user_sea_move_input(gc, unit, &src_sea)
+					dst_air_idx = get_move_input(gc, Sea_Unit_Names[unit], &src_sea)
 				}
 				dst_air := gc.territories[dst_air_idx]
 				update_move_history(gc, &src_sea.territory, dst_air_idx)
@@ -126,7 +126,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 				dst_sea := gc.seas[dst_sea_idx]
 				if (dst_sea.enemy_blockade_total > 0) {
-					dst_air.combat_sActive_Sea_Unit
+					dst_air.combat_status = Combat_Status.PRE_COMBAT
 					sea_distance = TRANSPORT_MOVES_MAX
 				}
 				unit_after_move: Active_Sea_Unit
@@ -154,4 +154,33 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		}
 	}
 	return true
+}
+
+load_unit :: proc(
+	src_land: ^Land,
+	dst_sea: ^Sea,
+	active_transport: Active_Sea_Unit,
+	player_idx: int,
+	active_land_unit: Active_Land_Unit,
+) {
+	idle_land_unit := Idle_Land_From_Active[active_land_unit]
+	new_active_transport := Transport_Load_Unit[idle_land_unit][active_transport]
+	dst_sea.active_sea_units[new_active_transport] += 1
+	dst_sea.idle_sea_units[player_idx][Idle_Sea_From_Active[new_active_transport]] += 1
+	src_land.active_land_units[active_land_unit] -= 1
+	src_land.idle_land_units[player_idx][idle_land_unit] -= 1
+}
+
+load_large_transport :: proc(
+	gc: ^Game_Cache,
+	active_land_unit: Active_Land_Unit,
+	src_land: ^Land,
+	dst_sea: ^Sea,
+) {
+	for transport in Transport_Load_Large {
+		if dst_sea.active_sea_units[transport] > 0 {
+			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_land_unit)
+			return
+		}
+	}
 }
