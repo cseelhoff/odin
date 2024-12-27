@@ -6,30 +6,16 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	team := gc.current_turn.team
 	enemy_team_idx := team.enemy_team.index
 	clear_needed := false
-	defer if (clear_needed) {clear_move_history(gc)}
-	for &src_land, src_land_idx in gc.lands {
-		if (src_land.Active_Armies[Active_Army.INFANTRY_UNMOVED] == 0) do continue
-		clear_needed = true
-		sa.resize(&gc.valid_moves, 1)
-		dst_air_idx := src_land.territory_index
-		sa.set(&gc.valid_moves, 0, dst_air_idx)
+	defer if clear_needed do clear_move_history(gc)
+	for &src_land in gc.lands {
+		if (src_land.Active_Armies[Active_Army.INF_UNMOVED] == 0) do continue
+		dst_air_idx := reset_valid_moves(gc, &src_land, &clear_needed)
 		add_valid_infantry_moves(gc, &src_land)
-		for src_land.Active_Armies[Active_Army.INFANTRY_UNMOVED] > 0 {
-			if (gc.valid_moves.len > 1) {
-				if (gc.answers_remaining == 0) do return true
-				dst_air_idx = get_move_input(
-					gc,
-					Army_Names[Active_Army.INFANTRY_UNMOVED],
-					&src_land.territory,
-				)
-			}
-			update_move_history(gc, &src_land.territory, dst_air_idx)
+		for src_land.Active_Armies[Active_Army.INF_UNMOVED] > 0 {
+			get_move_input(gc, TANK_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
 			if (dst_air_idx >= len(LANDS_DATA)) {
-				dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
-				load_small_transport(gc, .INFANTRY_UNMOVED, &src_land, dst_sea)
-				// recalculate valid moves since transport cargo has changed
-				sa.resize(&gc.valid_moves, 1)
-				add_valid_large_land_moves(gc, &src_land)
+				load_small_transport(gc, .INF_UNMOVED, &src_land, dst_air_idx)
+				add_valid_infantry_moves(gc, &src_land)
 				continue
 			}
 			dst_land := gc.lands[dst_air_idx]
@@ -40,16 +26,16 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.Active_Armies[Active_Army.INFANTRY_0_MOVES] +=
-					src_land.Active_Armies[Active_Army.INFANTRY_UNMOVED]
-				src_land.Active_Armies[Active_Army.INFANTRY_UNMOVED] = 0
+				src_land.Active_Armies[Active_Army.INF_0_MOVES] +=
+					src_land.Active_Armies[Active_Army.INF_UNMOVED]
+				src_land.Active_Armies[Active_Army.INF_UNMOVED] = 0
 				break
 			}
 			move_army(
 				&dst_land,
-				.INFANTRY_0_MOVES,
+				.INF_0_MOVES,
 				gc.current_turn,
-				.INFANTRY_UNMOVED,
+				.INF_UNMOVED,
 				&src_land,
 			)
 		}

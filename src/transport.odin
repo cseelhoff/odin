@@ -169,28 +169,34 @@ load_large_transport :: proc(
 	gc: ^Game_Cache,
 	active_army: active_army,
 	src_land: ^Land,
-	dst_sea: ^Sea,
+	dst_air_idx: int,
 ) {
+	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 	for transport in Transport_Can_Load_Large {
 		if dst_sea.Active_Ships[transport] > 0 {
 			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_army)
+			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 			return
 		}
 	}
+	fmt.eprintln("Error: No large transport available to load\n")
 }
 
 load_small_transport :: proc(
 	gc: ^Game_Cache,
 	active_army: active_army,
 	src_land: ^Land,
-	dst_sea: ^Sea,
+	dst_air_idx: int,
 ) {
+	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 	for transport in Transport_Can_Load_Small {
 		if dst_sea.Active_Ships[transport] > 0 {
 			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_army)
+			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 			return
 		}
 	}
+	fmt.eprintln("Error: No large transport available to load\n")
 }
 
 skip_empty_transports :: proc(gc: ^Game_Cache) {
