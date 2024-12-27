@@ -5,17 +5,17 @@ move_artillery :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	team := gc.current_turn.team
 	enemy_team_idx := team.enemy_team.index
-	clear_needed := false
-	defer if clear_needed do clear_move_history(gc)
+	gc.clear_needed = false
+	defer if gc.clear_needed do clear_move_history(gc)
 	for &src_land in gc.lands {
-		if src_land.Active_Armies[Active_Army.ARTY_UNMOVED] == 0 do continue
-		dst_air_idx := reset_valid_moves(gc, &src_land, &clear_needed)
-		add_valid_large_land_moves(gc, &src_land)
-		for src_land.Active_Armies[Active_Army.ARTY_UNMOVED] > 0 {
-			get_move_input(gc, TANK_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
+		if src_land.active_armies[Active_Army.ARTY_UNMOVED] == 0 do continue
+		dst_air_idx := reset_valid_moves(gc, &src_land)
+		add_valid_large_army_moves(gc, &src_land)
+		for src_land.active_armies[Active_Army.ARTY_UNMOVED] > 0 {
+			dst_air_idx = get_move_input(gc, TANK_UNMOVED_NAME, &src_land) or_return
 			if (dst_air_idx >= len(LANDS_DATA)) {
 				load_large_transport(gc, .ARTY_UNMOVED, &src_land, dst_air_idx)
-				add_valid_large_land_moves(gc, &src_land) //reset valid moves since transport cargo has changed
+				add_valid_large_army_moves(gc, &src_land) //reset valid moves since transport cargo has changed
 				continue
 			}
 			dst_land := gc.lands[dst_air_idx]
@@ -26,9 +26,9 @@ move_artillery :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.Active_Armies[Active_Army.ARTY_0_MOVES] +=
-					src_land.Active_Armies[Active_Army.ARTY_UNMOVED]
-				src_land.Active_Armies[Active_Army.ARTY_UNMOVED] = 0
+				src_land.active_armies[Active_Army.ARTY_0_MOVES] +=
+					src_land.active_armies[Active_Army.ARTY_UNMOVED]
+				src_land.active_armies[Active_Army.ARTY_UNMOVED] = 0
 				break
 			}
 			move_army(&dst_land, .ARTY_0_MOVES, gc.current_turn, .ARTY_UNMOVED, &src_land)

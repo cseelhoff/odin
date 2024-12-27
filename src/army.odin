@@ -1,5 +1,7 @@
 package oaaa
 
+import sa "core:container/small_array"
+
 Idle_Army :: enum {
 	INF,
 	ARTY,
@@ -32,7 +34,7 @@ Army_Names := [?]string {
 }
 
 Active_Army_To_Idle := [?]Idle_Army {
-	Active_Army.INF_1_MOVES = .INF,
+	Active_Army.INF_UNMOVED = .INF,
 	Active_Army.ARTY_UNMOVED = .ARTY,
 	Active_Army.TANK_UNMOVED = .TANK,
 	Active_Army.AAGUN_UNMOVED = .AAGUN,
@@ -45,11 +47,11 @@ move_army :: proc(
 	src_unit: Active_Army,
 	src_land: ^Land,
 ) {
-	dst_land.Active_Armies[dst_unit] += 1
-	dst_land.Idle_Armies[player.index][Active_Army_To_Idle[dst_unit]] += 1
+	dst_land.active_armies[dst_unit] += 1
+	dst_land.idle_armies[player.index][Active_Army_To_Idle[dst_unit]] += 1
 	dst_land.teams_unit_count[player.team.index] += 1
-	src_land.Active_Armies[src_unit] -= 1
-	src_land.Idle_Armies[player.index][Active_Army_To_Idle[dst_unit]] -= 1
+	src_land.active_armies[src_unit] -= 1
+	src_land.idle_armies[player.index][Active_Army_To_Idle[dst_unit]] -= 1
 	src_land.teams_unit_count[player.team.index] -= 1
 }
 
@@ -60,7 +62,7 @@ add_valid_large_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_ships := dst_sea.Idle_Ships[gc.current_turn.index]
+		idle_ships := dst_sea.idle_ships[gc.current_turn.index]
 		if (idle_ships[Idle_Ship.TRANS_EMPTY] == 0 &&
 			   idle_ships[Idle_Ship.TRANS_1I] == 0) { 	// large
 			continue

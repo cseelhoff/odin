@@ -18,18 +18,18 @@ BOMBER_MAX_MOVES :: 6
 
 move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
-	clear_needed := false
-	defer if clear_needed do clear_move_history(gc)
-	for src_air in gc.territories {
-		if src_air.Active_Planes[Active_Plane.BOMBER_UNMOVED] == 0 do continue
+	gc.clear_needed = false
+	defer if gc.clear_needed do clear_move_history(gc)
+	for &src_air in gc.territories {
+		if src_air.active_planes[Active_Plane.BOMBER_UNMOVED] == 0 do continue
 		if !gc.is_bomber_cache_current do refresh_can_bombers_land_here(gc)
-		dst_air_idx := reset_valid_moves(gc, &src_air, &clear_needed)
+		dst_air_idx := reset_valid_moves(gc, src_air)
 		add_valid_bomber_moves(gc, src_air)
-		for src_air.Active_Planes[Active_Plane.BOMBER_UNMOVED] > 0 {
-			get_move_input(gc, BOMBER_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
+		for src_air.active_planes[Active_Plane.BOMBER_UNMOVED] > 0 {
+			dst_air_idx = get_move_input(gc, BOMBER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			air_dist := src_air.air_distances[dst_air_idx]
-			if !dst_air.can_bomber_land_here > 0 {
+			if !dst_air.can_bomber_land_here {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
 				air_dist = BOMBER_MAX_MOVES
@@ -97,11 +97,13 @@ add_valid_bomber_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
 add_meaningful_bomber_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	terr_idx := dst_air.territory_index
 	if dst_air.can_bomber_land_here ||
-	   dst_air.teams_unit_count[gc.current_turn.team.enemy_team.terr_idx] != 0 ||
+	   dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] != 0 ||
 	   terr_idx < len(LANDS_DATA) &&
 		   gc.lands[terr_idx].factory_damage < gc.lands[terr_idx].factory_max_damage * 2 {
 		add_move_if_not_skipped(gc, src_air, dst_air)
 	}
 }
 
-land_bomber_units::proc(gc: ^Game_Cache) -> (ok: bool) {}
+land_bomber_units::proc(gc: ^Game_Cache) -> (ok: bool) {
+	return true
+}

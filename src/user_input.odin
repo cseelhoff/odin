@@ -22,15 +22,9 @@ import "core:strconv"
 // 	return get_ai_input(gc)
 // }
 
-get_retreat_input :: proc(
-	gc: ^Game_Cache,
-	src_air: ^Territory,
-	dst_air_idx: ^int,
-) -> (
-	ok: bool,
-) {
+get_retreat_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (dst_air_idx: int, ok: bool) {
 	if gc.valid_moves.len > 1 {
-		if gc.answers_remaining == 0 do return false
+		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.current_turn.index].is_human {
 			fmt.print("Retreat From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
@@ -40,19 +34,19 @@ get_retreat_input :: proc(
 		}
 		dst_air_idx = get_ai_input(gc)
 	}
-	return true
+	return dst_air_idx, true
 }
 
 get_move_input :: proc(
 	gc: ^Game_Cache,
 	unit_name: string,
 	src_air: ^Territory,
-	dst_air_idx: ^int,
 ) -> (
+	dst_air_idx: int,
 	ok: bool,
 ) {
 	if gc.valid_moves.len > 1 {
-		if gc.answers_remaining == 0 do return false
+		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.current_turn.index].is_human {
 			fmt.print("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
@@ -63,7 +57,7 @@ get_move_input :: proc(
 		dst_air_idx = get_ai_input(gc)
 	}
 	update_move_history(gc, src_air, dst_air_idx)
-	return true
+	return dst_air_idx, true
 }
 
 get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {

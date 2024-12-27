@@ -27,9 +27,9 @@ Player :: struct {
 	factory_locations:  sa.Small_Array(len(LANDS_DATA), ^Land),
 	captial:      ^Land,
 	team:               ^Team,
-	money:              uint,
-	income_per_turn:    uint,
-	total_player_units: uint,
+	money:              int,
+	income_per_turn:    int,
+	total_player_units: int,
 	index:              int,
 }
 

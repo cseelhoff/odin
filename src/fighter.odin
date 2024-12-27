@@ -16,15 +16,15 @@ FIGHTER_MAX_MOVES :: 4
 
 move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
-	clear_needed := false
-	defer if clear_needed do clear_move_history(gc)
-	for src_air in gc.territories {
-		if src_air.Active_Planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
+	gc.clear_needed = false
+	defer if gc.clear_needed do clear_move_history(gc)
+	for &src_air in gc.territories {
+		if src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
 		if !gc.is_fighter_cache_current do refresh_can_fighters_land_here(gc)
-		dst_air_idx := reset_valid_moves(gc, &src_air, &clear_needed)
+		dst_air_idx := reset_valid_moves(gc, src_air)
 		add_valid_fighter_moves(gc, src_air)
-		for src_air.Active_Planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
-			get_move_input(gc, FIGHTER_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
+		for src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
+			dst_air_idx = get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			airDistance := src_air.air_distances[dst_air_idx]
 			if (dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0) {
@@ -75,7 +75,7 @@ refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
 			fighter_can_land_here(&sea.territory)
 		}
 		// if player owns a carrier, then landing area is 2 spaces away
-		if sea.Active_Ships[Active_Ship.CARRIERS_UNMOVED] > 0 {
+		if sea.active_ships[Active_Ship.CARRIER_UNMOVED] > 0 {
 			for adj_sea in sa.slice(&sea.canal_paths[gc.canal_state].adjacent_seas) {
 				fighter_can_land_here(adj_sea)
 			}
@@ -113,4 +113,6 @@ add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_ai
 	}
 }
 
-land_fighter_units::proc(gc: ^Game_Cache) -> (ok: bool) {}
+land_fighter_units::proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
+}

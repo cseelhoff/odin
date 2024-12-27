@@ -5,14 +5,14 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	team := gc.current_turn.team
 	enemy_team_idx := team.enemy_team.index
-	clear_needed := false
-	defer if clear_needed do clear_move_history(gc)
+	gc.clear_needed = false
+	defer if gc.clear_needed do clear_move_history(gc)
 	for &src_land in gc.lands {
-		if (src_land.Active_Armies[Active_Army.INF_UNMOVED] == 0) do continue
-		dst_air_idx := reset_valid_moves(gc, &src_land, &clear_needed)
+		if (src_land.active_armies[Active_Army.INF_UNMOVED] == 0) do continue
+		dst_air_idx := reset_valid_moves(gc, &src_land)
 		add_valid_infantry_moves(gc, &src_land)
-		for src_land.Active_Armies[Active_Army.INF_UNMOVED] > 0 {
-			get_move_input(gc, TANK_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
+		for src_land.active_armies[Active_Army.INF_UNMOVED] > 0 {
+			dst_air_idx = get_move_input(gc, TANK_UNMOVED_NAME, &src_land) or_return
 			if (dst_air_idx >= len(LANDS_DATA)) {
 				load_small_transport(gc, .INF_UNMOVED, &src_land, dst_air_idx)
 				add_valid_infantry_moves(gc, &src_land)
@@ -26,9 +26,9 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.Active_Armies[Active_Army.INF_0_MOVES] +=
-					src_land.Active_Armies[Active_Army.INF_UNMOVED]
-				src_land.Active_Armies[Active_Army.INF_UNMOVED] = 0
+				src_land.active_armies[Active_Army.INF_0_MOVES] +=
+					src_land.active_armies[Active_Army.INF_UNMOVED]
+				src_land.active_armies[Active_Army.INF_UNMOVED] = 0
 				break
 			}
 			move_army(
@@ -50,7 +50,7 @@ add_valid_infantry_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_ships := dst_sea.Idle_Ships[gc.current_turn.index]
+		idle_ships := dst_sea.idle_ships[gc.current_turn.index]
 		if (idle_ships[Idle_Ship.TRANS_EMPTY] == 0 &&
 			   idle_ships[Idle_Ship.TRANS_1I] == 0 &&
 			   idle_ships[Idle_Ship.TRANS_1A] == 0 &&

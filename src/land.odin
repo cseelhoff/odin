@@ -14,23 +14,23 @@ SA_Adjacent_L2S :: sa.Small_Array(MAX_LAND_TO_SEA_CONNECTIONS, ^Sea)
 Land_Data :: struct {
 	name:  string,
 	owner: string,
-	value: uint,
+	value: int,
 }
 
 Land :: struct {
 	using territory:    Territory,
-	Idle_Armys:    [PLAYERS_COUNT]Idle_Army_For_Player,
-	Active_Armies:  [len(Active_Army)]uint,
+	idle_armies:        [PLAYERS_COUNT]Idle_Army_For_Player,
+	active_armies:      [len(Active_Army)]int,
 	owner:              ^Player,
-	factory_damage:     uint,
-	factory_max_damage: uint,
-	bombard_max_damage: uint,
+	factory_damage:     int,
+	factory_max_damage: int,
+	bombard_max_damage: int,
 	lands_2_moves_away: sa.Small_Array(len(LANDS_DATA), Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,
 	original_owner:     ^Player,
-	value:              uint,
-	land_distances:		 [len(LANDS_DATA)]uint,
+	value:              int,
+	land_distances:     [len(LANDS_DATA)]int,
 	land_index:         int,
 }
 
@@ -40,7 +40,7 @@ Land_2_Moves_Away :: struct {
 }
 
 L2S_2_Moves_Away :: struct {
-	sea:      ^Sea,
+	sea:       ^Sea,
 	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
 }
 

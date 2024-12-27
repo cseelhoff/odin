@@ -1,39 +1,39 @@
 package oaaa
 
-Idle_Plane_For_Player :: [len(Idle_Plane)]uint
-Idle_Army_For_Player :: [len(Idle_Army)]uint
-Idle_Sea_For_Player :: [len(Idle_Ship)]uint
+Idle_Plane_For_Player :: [len(Idle_Plane)]int
+Idle_Army_For_Player :: [len(Idle_Army)]int
+Idle_Sea_For_Player :: [len(Idle_Ship)]int
 
 Game_State :: struct {
-	current_turn: uint,
-	seed:         uint,
-	money:        [PLAYERS_COUNT]uint,
+	current_turn: int,
+	seed:         int,
+	money:        [PLAYERS_COUNT]int,
 	land_state:   #soa[len(LANDS_DATA)]Land_State,
 	sea_state:    #soa[SEAS_COUNT]Sea_State,
 }
 
 Territory_State :: struct {
-	Idle_Planes:   [PLAYERS_COUNT]Idle_Plane_For_Player,
-	Active_Planes: [len(Active_Plane)]uint,
-	skipped_moves:    [TERRITORIES_COUNT]bool,
-	combat_status:    Combat_Status,
-	builds_left:      uint,
+	idle_planes:   [PLAYERS_COUNT]Idle_Plane_For_Player,
+	active_planes: [len(Active_Plane)]int,
+	skipped_moves: [TERRITORIES_COUNT]bool,
+	combat_status: Combat_Status,
+	builds_left:   int,
 }
 
 Land_State :: struct {
 	using territory_state: Territory_State,
-	Idle_Armys:       [PLAYERS_COUNT]Idle_Army_For_Player,
-	Active_Armies:     [len(Active_Army)]uint,
+	idle_armies:           [PLAYERS_COUNT]Idle_Army_For_Player,
+	active_armies:         [len(Active_Army)]int,
 	owner:                 int,
-	factory_damage:        uint,
-	factory_max_damage:    uint,
-	bombard_max_damage:    uint,
+	factory_damage:        int,
+	factory_max_damage:    int,
+	bombard_max_damage:    int,
 }
 
 Sea_State :: struct {
 	using territory_state: Territory_State,
-	Idle_Ships:        [PLAYERS_COUNT]Idle_Sea_For_Player,
-	Active_Ships:      [len(Active_Ship)]uint,
+	idle_ships:            [PLAYERS_COUNT]Idle_Sea_For_Player,
+	active_ships:          [len(Active_Ship)]int,
 }
 
 Combat_Status :: enum {

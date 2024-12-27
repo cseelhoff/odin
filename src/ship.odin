@@ -1,5 +1,7 @@
 package oaaa
 
+import sa "core:container/small_array"
+
 Idle_Ship :: enum {
 	TRANS_EMPTY,
 	TRANS_1I,
@@ -101,7 +103,7 @@ Ship_Names := [?]string {
 	Active_Ship.SUB_0_MOVES           = "SUB_0_MOVES",
 	Active_Ship.DESTROYER_UNMOVED    = "DESTROYER_UNMOVED",
 	Active_Ship.DESTROYER_0_MOVES    = "DESTROYER_0_MOVES",
-	Active_Ship.CARRIER_UNMOVED      = "CARRIERS_UNMOVED",
+	Active_Ship.CARRIER_UNMOVED      = CARRIER_UNMOVED_NAME,
 	Active_Ship.CARRIER_0_MOVES      = "CARRIERS_0_MOVES",
 	Active_Ship.CRUISER_UNMOVED      = "CRUISER_UNMOVED",
 	Active_Ship.CRUISER_0_MOVES      = "CRUISER_0_MOVES",
@@ -189,24 +191,24 @@ Ships_After_Retreat := [?]Active_Ship {
 move_dest_crus_bs :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Unmoved_Blockade_Ships {
-		clear_needed := false
-		defer if clear_needed do clear_move_history(gc)
-		for src_sea in gc.seas {
-			if src_sea.Active_Ships[ship] == 0 do continue
-			dst_air_idx := reset_valid_moves(gc, &src_air, &clear_needed)
-			add_valid_ship_moves(gc, src_sea)
-			for src_sea.Active_Ships[ship] > 0 {
-				get_move_input(gc, Ship_Names[ship], &src_air, &dst_air_idx) or_return
-				dst_sea := gc.seas[dst_sea_idx]
-				if !dst_sea.teams_unit_count[gc.current_turn.team.index] > 0 {
+		gc.clear_needed = false
+		defer if gc.clear_needed do clear_move_history(gc)
+		for &src_sea in gc.seas {
+			if src_sea.active_ships[ship] == 0 do continue
+			dst_air_idx := reset_valid_moves(gc, &src_sea)
+			add_valid_ship_moves(gc, &src_sea)
+			for src_sea.active_ships[ship] > 0 {
+				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+				dst_sea := gc.seas[dst_air_idx - len(LANDS_DATA)]
+				if dst_sea.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0 {
 					dst_sea.combat_status = .PRE_COMBAT
 				}
 				if src_sea == dst_sea {
-					src_sea.Active_Ships[Ships_Moved[ship]] += src_sea.Active_Ships[ship]
-					src_sea.Active_Ships[ship] = 0
+					src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
+					src_sea.active_ships[ship] = 0
 					break
 				}
-				move_ship(dst_sea, Ships_Moved[ship], gc.current_turn, ship, src_sea)
+				move_ship(&dst_sea, Ships_Moved[ship], gc.current_turn, ship, &src_sea)
 			}
 		}
 	}
@@ -240,10 +242,10 @@ move_ship :: proc(
 	src_unit: Active_Ship,
 	src_sea: ^Sea,
 ) {
-	dst_land.Active_Ships[dst_unit] += 1
-	dst_land.Idle_Ships[player.index][Active_Ship_To_Idle[dst_unit]] += 1
-	dst_land.teams_unit_count[player.team.index] += 1
-	src_land.Active_Ships[src_unit] -= 1
-	src_land.Idle_Ships[player.index][Active_Ship_To_Idle[dst_unit]] -= 1
-	src_land.teams_unit_count[player.team.index] -= 1
+	dst_sea.active_ships[dst_unit] += 1
+	dst_sea.idle_ships[player.index][Active_Ship_To_Idle[dst_unit]] += 1
+	dst_sea.teams_unit_count[player.team.index] += 1
+	src_sea.active_ships[src_unit] -= 1
+	src_sea.idle_ships[player.index][Active_Ship_To_Idle[dst_unit]] -= 1
+	src_sea.teams_unit_count[player.team.index] -= 1
 }

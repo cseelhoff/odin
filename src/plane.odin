@@ -44,13 +44,15 @@ move_plane :: proc(
 	src_unit: Active_Plane,
 	src_air: ^Territory,
 ) {
-	dst_air.Active_Planes[dst_unit] += 1
-	dst_air.Idle_Planes[player.index][Active_Army_To_Idle[dst_unit]] += 1
+	dst_air.active_planes[dst_unit] += 1
+	dst_air.idle_planes[player.index][Active_Army_To_Idle[dst_unit]] += 1
 	dst_air.teams_unit_count[player.team.index] += 1
-	src_air.Active_Planes[src_unit] -= 1
-	src_air.Idle_Planes[player.index][Active_Army_To_Idle[dst_unit]] -= 1
+	src_air.active_planes[src_unit] -= 1
+	src_air.idle_planes[player.index][Active_Army_To_Idle[dst_unit]] -= 1
 	src_air.teams_unit_count[player.team.index] -= 1
-	src_air.Active_Planes[src_unit] -= 1
+	src_air.active_planes[src_unit] -= 1
 }
 
-crash_air_units::proc(gc: ^Game_Cache) -> (ok: bool) {}
+crash_air_units::proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
+}
