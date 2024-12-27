@@ -12,21 +12,23 @@ SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
 
 Game_Cache :: struct {
 	//state:             Game_State,
-	teams:             Teams,
-	seas:              Seas,
-	lands:             Lands,
-	players:           Players,
-	territories:       Territory_Pointers,
-	valid_moves:       sa.Small_Array(MAX_VALID_MOVES, int),
-	unlucky_player:    ^Player,
-	current_turn:      ^Player,
-	seed:              uint,
-	canal_state:       int,
-	step_id:           uint,
-	answers_remaining: uint,
-	selected_action:   int,
-	max_loops:         uint,
-	actually_print:    bool,
+	teams:                    Teams,
+	seas:                     Seas,
+	lands:                    Lands,
+	players:                  Players,
+	territories:              Territory_Pointers,
+	valid_moves:              sa.Small_Array(MAX_VALID_MOVES, int),
+	unlucky_player:           ^Player,
+	current_turn:             ^Player,
+	seed:                     uint,
+	canal_state:              int,
+	step_id:                  uint,
+	answers_remaining:        uint,
+	selected_action:          int,
+	max_loops:                uint,
+	actually_print:           bool,
+	is_bomber_cache_current:  bool,
+	is_fighter_cache_current: bool,
 }
 
 initialize_map_constants :: proc(gc: ^Game_Cache) -> (ok: bool) {
@@ -61,13 +63,13 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 		gc.lands[i].factory_damage = land.factory_damage
 		gc.lands[i].factory_max_damage = land.factory_max_damage
 		gc.lands[i].bombard_max_damage = land.bombard_max_damage
-		gc.lands[i].idle_land_units = land.idle_land_units
-		gc.lands[i].active_land_units = land.active_land_units
+		gc.lands[i].Idle_Armys = land.Idle_Armys
+		gc.lands[i].Active_Armys = land.Active_Armys
 		load_territory_from_state(&gc.lands[i].territory, &land.territory_state)
 	}
 	for &sea, i in gs.sea_state {
-		gc.seas[i].idle_sea_units = sea.idle_sea_units
-		gc.seas[i].active_sea_units = sea.active_sea_units
+		gc.seas[i].Idle_Ships = sea.Idle_Ships
+		gc.seas[i].Active_Ships = sea.Active_Ships
 		load_territory_from_state(&gc.seas[i].territory, &sea.territory_state)
 	}
 }
@@ -76,6 +78,6 @@ load_territory_from_state :: proc(territory: ^Territory, ts: ^Territory_State) {
 	territory.combat_status = ts.combat_status
 	territory.builds_left = ts.builds_left
 	territory.skipped_moves = ts.skipped_moves
-	territory.active_air_units = ts.active_air_units
-	territory.idle_air_units = ts.idle_air_units
+	territory.Active_Planes = ts.Active_Planes
+	territory.Idle_Plane_units = ts.Idle_Plane_units
 }

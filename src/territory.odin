@@ -10,8 +10,8 @@ SA_Adjacent_Airs :: sa.Small_Array(MAX_AIR_TO_AIR_CONNECTIONS, ^Territory)
 
 Territory :: struct {
 	name:                       string,
-	idle_air_units:             [PLAYERS_COUNT]Idle_Air_For_Player,
-	active_air_units:           [len(Active_Air_Unit)]uint,
+	Idle_Plane_units:             [PLAYERS_COUNT]Idle_Plane_For_Player,
+	Active_Planes:           [len(Active_Plane)]uint,
 	air_distances:              [TERRITORIES_COUNT]uint,
 	skipped_moves:              [TERRITORIES_COUNT]bool,
 	combat_status:              Combat_Status,

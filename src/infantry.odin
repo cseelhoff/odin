@@ -8,18 +8,18 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	clear_needed := false
 	defer if (clear_needed) {clear_move_history(gc)}
 	for &src_land, src_land_idx in gc.lands {
-		if (src_land.active_land_units[Active_Land_Unit.INFANTRY_UNMOVED] == 0) do continue
+		if (src_land.Active_Armys[Active_Army.INFANTRY_UNMOVED] == 0) do continue
 		clear_needed = true
 		sa.resize(&gc.valid_moves, 1)
 		dst_air_idx := src_land.territory_index
 		sa.set(&gc.valid_moves, 0, dst_air_idx)
 		add_valid_infantry_moves(gc, &src_land)
-		for src_land.active_land_units[Active_Land_Unit.INFANTRY_UNMOVED] > 0 {
+		for src_land.Active_Armys[Active_Army.INFANTRY_UNMOVED] > 0 {
 			if (gc.valid_moves.len > 1) {
 				if (gc.answers_remaining == 0) do return true
 				dst_air_idx = get_move_input(
 					gc,
-					Land_Unit_Names[Active_Land_Unit.INFANTRY_UNMOVED],
+					Army_Names[Active_Army.INFANTRY_UNMOVED],
 					&src_land.territory,
 				)
 			}
@@ -40,14 +40,14 @@ move_infantry :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.active_land_units[Active_Land_Unit.INFANTRY_0_MOVES_LEFT] +=
-					src_land.active_land_units[Active_Land_Unit.INFANTRY_UNMOVED]
-				src_land.active_land_units[Active_Land_Unit.INFANTRY_UNMOVED] = 0
+				src_land.Active_Armys[Active_Army.INFANTRY_0_MOVES] +=
+					src_land.Active_Armys[Active_Army.INFANTRY_UNMOVED]
+				src_land.Active_Armys[Active_Army.INFANTRY_UNMOVED] = 0
 				break
 			}
-			move_land_unit(
+			move_army(
 				&dst_land,
-				.INFANTRY_0_MOVES_LEFT,
+				.INFANTRY_0_MOVES,
 				gc.current_turn,
 				.INFANTRY_UNMOVED,
 				&src_land,
@@ -64,11 +64,11 @@ add_valid_infantry_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_sea_units := dst_sea.idle_sea_units[gc.current_turn.index]
-		if (idle_sea_units[Idle_Sea_Unit.TRANS_EMPTY] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.TRANS_1I] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.TRANS_1A] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.TRANS_1T] == 0) { 	// small
+		Idle_Ships := dst_sea.Idle_Ships[gc.current_turn.index]
+		if (Idle_Ships[Idle_Ship.TRANS_EMPTY] == 0 &&
+			   Idle_Ships[Idle_Ship.TRANS_1I] == 0 &&
+			   Idle_Ships[Idle_Ship.TRANS_1A] == 0 &&
+			   Idle_Ships[Idle_Ship.TRANS_1T] == 0) { 	// small
 			continue
 		}
 		if (!src_land.skipped_moves[dst_sea.territory_index]) {

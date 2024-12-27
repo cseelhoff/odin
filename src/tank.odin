@@ -6,20 +6,17 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	team := gc.current_turn.team
 	enemy_team_idx := team.enemy_team.index
 	clear_needed := false
-	defer if (clear_needed) {clear_move_history(gc)}
-	for &src_land, src_land_idx in gc.lands {
-		if (src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] == 0) do continue
-		clear_needed = true
-		sa.resize(&gc.valid_moves, 1)
-		dst_air_idx := src_land.territory_index
-		sa.set(&gc.valid_moves, 0, dst_air_idx)
+	defer if clear_needed do clear_move_history(gc)
+	for &src_land in gc.lands {
+		if src_land.Active_Armys[Active_Army.TANKS_UNMOVED] == 0 do continue
+		dst_air_idx := reset_valid_moves(gc, &src_sea, &clear_needed)
 		add_valid_tank_2_moves(gc, &src_land)
-		for src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] > 0 {
-			if (gc.valid_moves.len > 1) {
-				if (gc.answers_remaining == 0) do return true
+		for src_land.Active_Armys[Active_Army.TANKS_UNMOVED] > 0 {
+			if gc.valid_moves.len > 1 {
+				if gc.answers_remaining == 0 do return true
 				dst_air_idx = get_move_input(
 					gc,
-					Land_Unit_Names[Active_Land_Unit.TANKS_UNMOVED],
+					Army_Names[Active_Army.TANKS_UNMOVED],
 					&src_land.territory,
 				)
 			}
@@ -47,22 +44,22 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			}
 			switch (landDistance) {
 			case 0:
-				src_land.active_land_units[Active_Land_Unit.TANKS_0_MOVES_LEFT] +=
-					src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED]
-				src_land.active_land_units[Active_Land_Unit.TANKS_UNMOVED] = 0
+				src_land.Active_Armys[Active_Army.TANKS_0_MOVES] +=
+					src_land.Active_Armys[Active_Army.TANKS_UNMOVED]
+				src_land.Active_Armys[Active_Army.TANKS_UNMOVED] = 0
 				break
 			case 1:
-				move_land_unit(
+				move_army(
 					&dst_land,
-					.TANKS_1_MOVE_LEFT,
+					.TANKS_1_MOVES,
 					gc.current_turn,
 					.TANKS_UNMOVED,
 					&src_land,
 				)
 			case 2:
-				move_land_unit(
+				move_army(
 					&dst_land,
-					.TANKS_0_MOVES_LEFT,
+					.TANKS_0_MOVES,
 					gc.current_turn,
 					.TANKS_UNMOVED,
 					&src_land,
@@ -80,25 +77,25 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	clear_needed := false
 	defer if (clear_needed) {clear_move_history(gc)}
 	for &src_land, src_land_idx in gc.lands {
-		if (src_land.active_land_units[Active_Land_Unit.TANKS_1_MOVE_LEFT] == 0) do continue
+		if (src_land.Active_Armys[Active_Army.TANKS_1_MOVES] == 0) do continue
 		clear_needed = true
 		sa.resize(&gc.valid_moves, 1)
 		dst_air_idx := src_land.territory_index
 		sa.set(&gc.valid_moves, 0, dst_air_idx)
 		add_valid_large_land_moves(gc, &src_land)
-		for src_land.active_land_units[Active_Land_Unit.TANKS_1_MOVE_LEFT] > 0 {
+		for src_land.Active_Armys[Active_Army.TANKS_1_MOVES] > 0 {
 			if (gc.valid_moves.len > 1) {
 				if (gc.answers_remaining == 0) do return true
 				dst_air_idx = get_move_input(
 					gc,
-					Land_Unit_Names[Active_Land_Unit.TANKS_1_MOVE_LEFT],
+					Army_Names[Active_Army.TANKS_1_MOVES],
 					&src_land.territory,
 				)
 			}
 			update_move_history(gc, &src_land.territory, dst_air_idx)
 			if (dst_air_idx >= LANDS_COUNT) {
 				dst_sea := &gc.seas[dst_air_idx - LANDS_COUNT]
-				load_large_transport(gc, .TANKS_1_MOVE_LEFT, &src_land, dst_sea)
+				load_large_transport(gc, .TANKS_1_MOVES, &src_land, dst_sea)
 				// recalculate valid moves since transport cargo has changed
 				sa.resize(&gc.valid_moves, 1)
 				add_valid_large_land_moves(gc, &src_land)
@@ -112,16 +109,16 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.active_land_units[Active_Land_Unit.TANKS_0_MOVES_LEFT] +=
-					src_land.active_land_units[Active_Land_Unit.TANKS_1_MOVE_LEFT]
-				src_land.active_land_units[Active_Land_Unit.TANKS_1_MOVE_LEFT] = 0
+				src_land.Active_Armys[Active_Army.TANKS_0_MOVES] +=
+					src_land.Active_Armys[Active_Army.TANKS_1_MOVES]
+				src_land.Active_Armys[Active_Army.TANKS_1_MOVES] = 0
 				break
 			}
-			move_land_unit(
+			move_army(
 				&dst_land,
-				.TANKS_0_MOVES_LEFT,
+				.TANKS_0_MOVES,
 				gc.current_turn,
-				.TANKS_1_MOVE_LEFT,
+				.TANKS_1_MOVES,
 				&src_land,
 			)
 		}
@@ -138,9 +135,9 @@ add_valid_tank_2_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (two moves away)
 	for &dst_sea_2_away in sa.slice(&src_land.seas_2_moves_away) {
-		idle_sea_units := dst_sea_2_away.sea.idle_sea_units[gc.current_turn.index]
-		if (idle_sea_units[Idle_Sea_Unit.TRANS_EMPTY] == 0 &&
-			   idle_sea_units[Idle_Sea_Unit.TRANS_1I] == 0) { 	// assume large, only tanks move 2
+		Idle_Ships := dst_sea_2_away.sea.Idle_Ships[gc.current_turn.index]
+		if (Idle_Ships[Idle_Ship.TRANS_EMPTY] == 0 &&
+			   Idle_Ships[Idle_Ship.TRANS_1I] == 0) { 	// assume large, only tanks move 2
 			continue
 		}
 		if (src_land.skipped_moves[dst_sea_2_away.sea.territory_index]) do continue

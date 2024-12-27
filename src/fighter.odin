@@ -3,53 +3,42 @@ import sa "core:container/small_array"
 import "core:mem"
 import "core:slice"
 
-Fighters_Expended_Moves := [?]Active_Air_Unit {
-	.FIGHTERS_AIR_4_MOVES_LEFT,
-	.FIGHTERS_AIR_3_MOVES_LEFT,
-	.FIGHTERS_AIR_2_MOVES_LEFT,
-	.FIGHTERS_AIR_1_MOVES_LEFT,
-	.FIGHTERS_AIR_0_MOVES_LEFT,
+Fighter_After_Moves := [?]Active_Plane {
+	.FIGHTER_4_MOVES,
+	.FIGHTER_3_MOVES,
+	.FIGHTER_2_MOVES,
+	.FIGHTER_1_MOVES,
+	.FIGHTER_0_MOVES,
 }
- 
+
+FIGHTER_UNMOVED_NAME :: "FIGHTER_UNMOVED"
+FIGHTER_MAX_MOVES :: 4
+
 move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	clear_needed := false
-	defer if(clear_needed) { clear_move_history(gc) }
+	defer if clear_needed do clear_move_history(gc)
 	for src_air in gc.territories {
-		if (src_air.active_air_units[Active_Air_Unit.FIGHTERS_AIR_UNMOVED] == 0) {
-			continue
-		}
-		if (!clear_needed) {
-			refresh_can_fighters_land_here(gc)
-			clear_needed = true
-		}
-		sa.resize(&gc.valid_moves, 1)
-		dst_air_idx := src_air.territory_index
-		gc.valid_moves.data[0] = dst_air_idx
+		if src_air.Active_Planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
+		if !gc.is_fighter_cache_current do refresh_can_fighters_land_here(gc)
+		dst_air_idx := reset_valid_moves(gc, &src_air, &clear_needed)
 		add_valid_fighter_moves(gc, src_air)
-		for src_air.active_air_units[Active_Air_Unit.FIGHTERS_AIR_UNMOVED] > 0 {
-			if (gc.valid_moves.len > 1) {
-				if (gc.answers_remaining == 0) {
-					return true
-				}
-				dst_air_idx = get_move_input(gc, Air_Unit_Names[Active_Air_Unit.FIGHTERS_AIR_UNMOVED], src_air)
-			}
+		for src_air.Active_Planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
+			get_move_input(gc, FIGHTER_UNMOVED_NAME, &src_air, &dst_air_idx) or_return
 			dst_air := gc.territories[dst_air_idx]
-			update_move_history(gc, src_air, dst_air_idx)
 			airDistance := src_air.air_distances[dst_air_idx]
 			if (dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0) {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
-				airDistance = 4 // Maximum move for fighters
+				airDistance = FIGHTER_MAX_MOVES
 			}
-			dst_air.active_air_units[Fighters_Expended_Moves[airDistance]] += 1
-			dst_air.idle_air_units[gc.current_turn.index][Idle_Air_Unit.FIGHTERS_AIR] += 1
-			// total_player_units_player.at(dst_air_idx) += 1
-			dst_air.teams_unit_count[gc.current_turn.team.index] += 1
-			src_air.active_air_units[Active_Air_Unit.FIGHTERS_AIR_UNMOVED] -= 1
-			src_air.idle_air_units[gc.current_turn.index][Idle_Air_Unit.FIGHTERS_AIR] -= 1
-			// total_player_units_player.at(src_air) -= 1
-			src_air.teams_unit_count[gc.current_turn.team.index] -= 1
+			move_plane(
+				dst_air,
+				Fighter_After_Moves[airDistance],
+				gc.current_turn,
+				.FIGHTER_UNMOVED,
+				src_air,
+			)
 		}
 	}
 	return true
@@ -86,7 +75,7 @@ refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
 			fighter_can_land_here(&sea.territory)
 		}
 		// if player owns a carrier, then landing area is 2 spaces away
-		if sea.active_sea_units[Active_Sea_Unit.CARRIERS_UNMOVED] > 0 {
+		if sea.Active_Ships[Active_Ship.CARRIERS_UNMOVED] > 0 {
 			for adj_sea in sa.slice(&sea.canal_paths[gc.canal_state].adjacent_seas) {
 				fighter_can_land_here(adj_sea)
 			}
@@ -95,6 +84,7 @@ refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
 			}
 		}
 	}
+	gc.is_fighter_cache_current = true
 }
 
 add_valid_fighter_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
@@ -122,3 +112,5 @@ add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_ai
 		add_move_if_not_skipped(gc, src_air, dst_air)
 	}
 }
+
+land_fighter_units::proc(gc: ^Game_Cache) -> (ok: bool) {}

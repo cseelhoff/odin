@@ -1,8 +1,8 @@
 package oaaa
 
-Idle_Air_For_Player :: [len(Idle_Air_Unit)]uint
-Idle_Land_For_Player :: [len(Idle_Land_Unit)]uint
-Idle_Sea_For_Player :: [len(Idle_Sea_Unit)]uint
+Idle_Plane_For_Player :: [len(Idle_Plane)]uint
+Idle_Army_For_Player :: [len(Idle_Army)]uint
+Idle_Sea_For_Player :: [len(Idle_Ship)]uint
 
 Game_State :: struct {
 	current_turn: uint,
@@ -13,8 +13,8 @@ Game_State :: struct {
 }
 
 Territory_State :: struct {
-	idle_air_units:   [PLAYERS_COUNT]Idle_Air_For_Player,
-	active_air_units: [len(Active_Air_Unit)]uint,
+	Idle_Plane_units:   [PLAYERS_COUNT]Idle_Plane_For_Player,
+	Active_Planes: [len(Active_Plane)]uint,
 	skipped_moves:    [TERRITORIES_COUNT]bool,
 	combat_status:    Combat_Status,
 	builds_left:      uint,
@@ -22,8 +22,8 @@ Territory_State :: struct {
 
 Land_State :: struct {
 	using territory_state: Territory_State,
-	idle_land_units:       [PLAYERS_COUNT]Idle_Land_For_Player,
-	active_land_units:     [len(Active_Land_Unit)]uint,
+	Idle_Armys:       [PLAYERS_COUNT]Idle_Army_For_Player,
+	Active_Armys:     [len(Active_Army)]uint,
 	owner:                 int,
 	factory_damage:        uint,
 	factory_max_damage:    uint,
@@ -32,8 +32,8 @@ Land_State :: struct {
 
 Sea_State :: struct {
 	using territory_state: Territory_State,
-	idle_sea_units:        [PLAYERS_COUNT]Idle_Sea_For_Player,
-	active_sea_units:      [len(Active_Sea_Unit)]uint,
+	Idle_Ships:        [PLAYERS_COUNT]Idle_Sea_For_Player,
+	Active_Ships:      [len(Active_Ship)]uint,
 }
 
 Combat_Status :: enum {

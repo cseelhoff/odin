@@ -20,8 +20,8 @@ Land_Strings :: struct {
 
 Land :: struct {
 	using territory:    Territory,
-	idle_land_units:    [PLAYERS_COUNT]Idle_Land_For_Player,
-	active_land_units:  [len(Active_Land_Unit)]uint,
+	Idle_Armys:    [PLAYERS_COUNT]Idle_Army_For_Player,
+	Active_Armys:  [len(Active_Army)]uint,
 	owner:              ^Player,
 	factory_damage:     uint,
 	factory_max_damage: uint,

@@ -8,18 +8,18 @@ move_artillery :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	clear_needed := false
 	defer if (clear_needed) {clear_move_history(gc)}
 	for &src_land, src_land_idx in gc.lands {
-		if (src_land.active_land_units[Active_Land_Unit.ARTILLERY_UNMOVED] == 0) do continue
+		if (src_land.Active_Armys[Active_Army.ARTILLERY_UNMOVED] == 0) do continue
 		clear_needed = true
 		sa.resize(&gc.valid_moves, 1)
 		dst_air_idx := src_land.territory_index
 		sa.set(&gc.valid_moves, 0, dst_air_idx)
 		add_valid_large_land_moves(gc, &src_land)
-		for src_land.active_land_units[Active_Land_Unit.ARTILLERY_UNMOVED] > 0 {
+		for src_land.Active_Armys[Active_Army.ARTILLERY_UNMOVED] > 0 {
 			if (gc.valid_moves.len > 1) {
 				if (gc.answers_remaining == 0) do return true
 				dst_air_idx = get_move_input(
 					gc,
-					Land_Unit_Names[Active_Land_Unit.ARTILLERY_UNMOVED],
+					Army_Names[Active_Army.ARTILLERY_UNMOVED],
 					&src_land.territory,
 				)
 			}
@@ -40,14 +40,14 @@ move_artillery :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.active_land_units[Active_Land_Unit.ARTILLERY_0_MOVES_LEFT] +=
-					src_land.active_land_units[Active_Land_Unit.ARTILLERY_UNMOVED]
-				src_land.active_land_units[Active_Land_Unit.ARTILLERY_UNMOVED] = 0
+				src_land.Active_Armys[Active_Army.ARTILLERY_0_MOVES] +=
+					src_land.Active_Armys[Active_Army.ARTILLERY_UNMOVED]
+				src_land.Active_Armys[Active_Army.ARTILLERY_UNMOVED] = 0
 				break
 			}
-			move_land_unit(
+			move_army(
 				&dst_land,
-				.ARTILLERY_0_MOVES_LEFT,
+				.ARTILLERY_0_MOVES,
 				gc.current_turn,
 				.ARTILLERY_UNMOVED,
 				&src_land,
