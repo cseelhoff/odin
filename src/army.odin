@@ -46,12 +46,11 @@ move_army :: proc(
 	src_land: ^Land,
 ) {
 	dst_land.Active_Armies[dst_unit] += 1
-	dst_land.Idle_Armys[player.index][Active_Army_To_Idle[dst_unit]] += 1
+	dst_land.Idle_Armies[player.index][Active_Army_To_Idle[dst_unit]] += 1
 	dst_land.teams_unit_count[player.team.index] += 1
 	src_land.Active_Armies[src_unit] -= 1
-	src_land.Idle_Armys[player.index][Active_Army_To_Idle[dst_unit]] -= 1
+	src_land.Idle_Armies[player.index][Active_Army_To_Idle[dst_unit]] -= 1
 	src_land.teams_unit_count[player.team.index] -= 1
-	src_land.Active_Armies[src_unit] -= 1
 }
 
 add_valid_large_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
@@ -61,9 +60,9 @@ add_valid_large_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		Idle_Ships := dst_sea.Idle_Ships[gc.current_turn.index]
-		if (Idle_Ships[Idle_Ship.TRANS_EMPTY] == 0 &&
-			   Idle_Ships[Idle_Ship.TRANS_1I] == 0) { 	// large
+		idle_ships := dst_sea.Idle_Ships[gc.current_turn.index]
+		if (idle_ships[Idle_Ship.TRANS_EMPTY] == 0 &&
+			   idle_ships[Idle_Ship.TRANS_1I] == 0) { 	// large
 			continue
 		}
 		if (!src_land.skipped_moves[dst_sea.territory_index]) {

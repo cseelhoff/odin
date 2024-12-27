@@ -50,11 +50,11 @@ add_valid_infantry_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		Idle_Ships := dst_sea.Idle_Ships[gc.current_turn.index]
-		if (Idle_Ships[Idle_Ship.TRANS_EMPTY] == 0 &&
-			   Idle_Ships[Idle_Ship.TRANS_1I] == 0 &&
-			   Idle_Ships[Idle_Ship.TRANS_1A] == 0 &&
-			   Idle_Ships[Idle_Ship.TRANS_1T] == 0) { 	// small
+		idle_ships := dst_sea.Idle_Ships[gc.current_turn.index]
+		if (idle_ships[Idle_Ship.TRANS_EMPTY] == 0 &&
+			   idle_ships[Idle_Ship.TRANS_1I] == 0 &&
+			   idle_ships[Idle_Ship.TRANS_1A] == 0 &&
+			   idle_ships[Idle_Ship.TRANS_1T] == 0) { 	// small
 			continue
 		}
 		if (!src_land.skipped_moves[dst_sea.territory_index]) {

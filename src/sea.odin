@@ -21,7 +21,7 @@ Sea :: struct {
 	Idle_Ships:             [PLAYERS_COUNT]Idle_Sea_For_Player,
 	Active_Ships:           [len(Active_Ship)]uint,
 	canal_paths:            Canal_Paths,
-	enemy_destroyers_total: uint,
+	enemy_DESTROYER_total: uint,
 	enemy_submarines_total: uint,
 	enemy_blockade_total:   uint,
 	allied_carriers:        uint,

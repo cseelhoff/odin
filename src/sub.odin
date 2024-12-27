@@ -46,7 +46,7 @@ add_valid_sub_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 			continue
 		}
 		for mid_sea in sa.slice(&dst_sea_2_away.mid_seas) {
-			if (mid_sea.enemy_destroyers_total == 0) {
+			if (mid_sea.enemy_DESTROYER_total == 0) {
 				sa.push(&gc.valid_moves, dst_sea_2_away.sea.territory_index)
 				break
 			}

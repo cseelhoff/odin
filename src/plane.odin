@@ -1,8 +1,8 @@
 package oaaa
 
 Idle_Plane :: enum {
-	FIGHTERS_AIR,
-	BOMBERS_AIR,
+	FIGHTER,
+	BOMBER,
 }
 
 Active_Plane :: enum {

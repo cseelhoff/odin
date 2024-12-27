@@ -9,10 +9,10 @@ Idle_Ship :: enum {
 	TRANS_1I_1A,
 	TRANS_1I_1T,
 	SUB,
-	DESTROYERS,
-	CARRIERS,
-	CRUISERS,
-	BATTLESHIPS,
+	DESTROYER,
+	CARRIER,
+	CRUISER,
+	BATTLESHIP,
 	BS_DAMAGED,
 }
 
@@ -50,8 +50,8 @@ Active_Ship :: enum {
 	TRANS_1I_1T_UNLOADED,
 	SUB_UNMOVED,
 	SUB_0_MOVES,
-	DESTROYERS_UNMOVED,
-	DESTROYERS_0_MOVES,
+	DESTROYER_UNMOVED,
+	DESTROYER_0_MOVES,
 	CARRIER_UNMOVED,
 	CARRIER_0_MOVES,
 	CRUISER_UNMOVED,
@@ -99,16 +99,16 @@ Ship_Names := [?]string {
 	Active_Ship.TRANS_1I_1T_UNLOADED  = "TRANS_1I_1T_UNLOADED",
 	Active_Ship.SUB_UNMOVED           = SUB_UNMOVED_NAME,
 	Active_Ship.SUB_0_MOVES           = "SUB_0_MOVES",
-	Active_Ship.DESTROYERS_UNMOVED    = "DESTROYERS_UNMOVED",
-	Active_Ship.DESTROYERS_0_MOVES    = "DESTROYERS_0_MOVES",
-	Active_Ship.CARRIERS_UNMOVED      = "CARRIERS_UNMOVED",
-	Active_Ship.CARRIERS_0_MOVES      = "CARRIERS_0_MOVES",
-	Active_Ship.CRUISERS_UNMOVED      = "CRUISERS_UNMOVED",
-	Active_Ship.CRUISERS_0_MOVES      = "CRUISERS_0_MOVES",
-	Active_Ship.CRUISERS_BOMBARDED    = "CRUISERS_BOMBARDED",
-	Active_Ship.BATTLESHIPS_UNMOVED   = "BATTLESHIPS_UNMOVED",
-	Active_Ship.BATTLESHIPS_0_MOVES   = "BATTLESHIPS_0_MOVES",
-	Active_Ship.BATTLESHIPS_BOMBARDED = "BATTLESHIPS_BOMBARDED",
+	Active_Ship.DESTROYER_UNMOVED    = "DESTROYER_UNMOVED",
+	Active_Ship.DESTROYER_0_MOVES    = "DESTROYER_0_MOVES",
+	Active_Ship.CARRIER_UNMOVED      = "CARRIERS_UNMOVED",
+	Active_Ship.CARRIER_0_MOVES      = "CARRIERS_0_MOVES",
+	Active_Ship.CRUISER_UNMOVED      = "CRUISER_UNMOVED",
+	Active_Ship.CRUISER_0_MOVES      = "CRUISER_0_MOVES",
+	Active_Ship.CRUISER_BOMBARDED    = "CRUISER_BOMBARDED",
+	Active_Ship.BATTLESHIP_UNMOVED   = "BATTLESHIP_UNMOVED",
+	Active_Ship.BATTLESHIP_0_MOVES   = "BATTLESHIP_0_MOVES",
+	Active_Ship.BATTLESHIP_BOMBARDED = "BATTLESHIP_BOMBARDED",
 	Active_Ship.BS_DAMAGED_UNMOVED    = "BS_DAMAGED_UNMOVED",
 	Active_Ship.BS_DAMAGED_0_MOVES    = "BS_DAMAGED_0_MOVES",
 	Active_Ship.BS_DAMAGED_BOMBARDED  = "BS_DAMAGED_BOMBARDED",
@@ -122,9 +122,9 @@ Active_Ship_To_Idle := [?]Idle_Ship {
 }
 
 Unmoved_Blockade_Ships := [?]Active_Ship {
-	Active_Ship.DESTROYERS_UNMOVED,
-	Active_Ship.CRUISERS_UNMOVED,
-	Active_Ship.BATTLESHIPS_UNMOVED,
+	Active_Ship.DESTROYER_UNMOVED,
+	Active_Ship.CRUISER_UNMOVED,
+	Active_Ship.BATTLESHIP_UNMOVED,
 	Active_Ship.BS_DAMAGED_UNMOVED,
 }
 
@@ -135,9 +135,9 @@ Ships_Moved := [?]Active_Ship {
 	Active_Ship.TRANS_2I_1_MOVES    = .TRANS_2I_0_MOVES,
 	Active_Ship.TRANS_1I_1A_1_MOVES = .TRANS_1I_1A_0_MOVES,
 	Active_Ship.TRANS_1I_1T_1_MOVES = .TRANS_1I_1T_0_MOVES,
-	Active_Ship.DESTROYERS_UNMOVED  = .DESTROYERS_0_MOVES,
-	Active_Ship.CRUISERS_UNMOVED    = .CRUISERS_0_MOVES,
-	Active_Ship.BATTLESHIPS_UNMOVED = .BATTLESHIPS_0_MOVES,
+	Active_Ship.DESTROYER_UNMOVED  = .DESTROYER_0_MOVES,
+	Active_Ship.CRUISER_UNMOVED    = .CRUISER_0_MOVES,
+	Active_Ship.BATTLESHIP_UNMOVED = .BATTLESHIP_0_MOVES,
 	Active_Ship.BS_DAMAGED_UNMOVED  = .BS_DAMAGED_0_MOVES,
 }
 
@@ -154,6 +154,36 @@ Ships_Moves := [?]int {
 	Active_Ship.TRANS_2I_2_MOVES    = 2,
 	Active_Ship.TRANS_1I_1A_2_MOVES = 2,
 	Active_Ship.TRANS_1I_1T_2_MOVES = 2,
+}
+
+Retreatable_Ships := [?]Active_Ship {
+	.TRANS_EMPTY_0_MOVES,
+	.TRANS_1I_0_MOVES,
+	.TRANS_1A_0_MOVES,
+	.TRANS_1T_0_MOVES,
+	.TRANS_1I_1A_0_MOVES,
+	.TRANS_1I_1T_0_MOVES,
+	.SUB_0_MOVES,
+	.DESTROYER_0_MOVES,
+	.CARRIER_0_MOVES,
+	.CRUISER_BOMBARDED,
+	.BATTLESHIP_BOMBARDED,
+	.BS_DAMAGED_BOMBARDED,
+}
+
+Ships_After_Retreat := [?]Active_Ship {
+	Active_Ship.TRANS_EMPTY_0_MOVES = .TRANS_EMPTY_0_MOVES,
+	Active_Ship.TRANS_1I_0_MOVES = .TRANS_1I_UNLOADED,
+	Active_Ship.TRANS_1A_0_MOVES = .TRANS_1A_UNLOADED,
+	Active_Ship.TRANS_1T_0_MOVES = .TRANS_1T_UNLOADED,
+	Active_Ship.TRANS_1I_1A_0_MOVES = .TRANS_1I_1A_UNLOADED,
+	Active_Ship.TRANS_1I_1T_0_MOVES = .TRANS_1I_1T_UNLOADED,
+	Active_Ship.SUB_0_MOVES = .SUB_0_MOVES,
+	Active_Ship.DESTROYER_0_MOVES = .DESTROYER_0_MOVES,
+	Active_Ship.CARRIER_0_MOVES = .CARRIER_0_MOVES,
+	Active_Ship.CRUISER_BOMBARDED = .CRUISER_BOMBARDED,
+	Active_Ship.BATTLESHIP_BOMBARDED = .BATTLESHIP_BOMBARDED,
+	Active_Ship.BS_DAMAGED_BOMBARDED = .BS_DAMAGED_BOMBARDED,
 }
 
 move_dest_crus_bs :: proc(gc: ^Game_Cache) -> (ok: bool) {
@@ -210,11 +240,10 @@ move_ship :: proc(
 	src_unit: Active_Ship,
 	src_sea: ^Sea,
 ) {
-	dst_land.Active_Ship[dst_unit] += 1
-	dst_land.Idle_Ship[player.index][Active_Ship_To_Idle[dst_unit]] += 1
+	dst_land.Active_Ships[dst_unit] += 1
+	dst_land.Idle_Ships[player.index][Active_Ship_To_Idle[dst_unit]] += 1
 	dst_land.teams_unit_count[player.team.index] += 1
 	src_land.Active_Ships[src_unit] -= 1
-	src_land.Idle_Armys[player.index][Active_Ship_To_Idle[dst_unit]] -= 1
+	src_land.Idle_Ships[player.index][Active_Ship_To_Idle[dst_unit]] -= 1
 	src_land.teams_unit_count[player.team.index] -= 1
-	src_land.Active_Ships[src_unit] -= 1
 }
