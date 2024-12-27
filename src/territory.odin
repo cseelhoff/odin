@@ -2,7 +2,7 @@ package oaaa
 import sa "core:container/small_array"
 import "core:mem"
 
-TERRITORIES_COUNT :: LANDS_COUNT + SEAS_COUNT
+TERRITORIES_COUNT :: len(LANDS_DATA) + SEAS_COUNT
 MAX_TERRITORY_TO_LAND_CONNECTIONS :: 6
 MAX_AIR_TO_AIR_CONNECTIONS :: 7
 SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land)
@@ -10,8 +10,8 @@ SA_Adjacent_Airs :: sa.Small_Array(MAX_AIR_TO_AIR_CONNECTIONS, ^Territory)
 
 Territory :: struct {
 	name:                       string,
-	Idle_Plane_units:             [PLAYERS_COUNT]Idle_Plane_For_Player,
-	Active_Planes:           [len(Active_Plane)]uint,
+	Idle_Planes:                [PLAYERS_COUNT]Idle_Plane_For_Player,
+	Active_Planes:              [len(Active_Plane)]uint,
 	air_distances:              [TERRITORIES_COUNT]uint,
 	skipped_moves:              [TERRITORIES_COUNT]bool,
 	combat_status:              Combat_Status,
@@ -62,7 +62,7 @@ initialize_territories :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territo
 	}
 	for &sea, sea_idx in seas {
 		sea.sea_index = sea_idx
-		sea.territory_index = sea_idx + LANDS_COUNT
+		sea.territory_index = sea_idx + len(LANDS_DATA)
 		territories[sea.territory_index] = &sea.territory
 	}
 }

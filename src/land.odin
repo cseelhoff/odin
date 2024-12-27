@@ -7,12 +7,11 @@ import "core:slice"
 import "core:strings"
 
 MAX_LAND_TO_SEA_CONNECTIONS :: 4
-LANDS_COUNT :: len(LANDS_STRINGS)
-Lands :: [LANDS_COUNT]Land
+Lands :: [len(LANDS_DATA)]Land
 MAX_PATHS_TO_LAND :: 2
 SA_Adjacent_L2S :: sa.Small_Array(MAX_LAND_TO_SEA_CONNECTIONS, ^Sea)
 
-Land_Strings :: struct {
+Land_Data :: struct {
 	name:  string,
 	owner: string,
 	value: uint,
@@ -21,17 +20,17 @@ Land_Strings :: struct {
 Land :: struct {
 	using territory:    Territory,
 	Idle_Armys:    [PLAYERS_COUNT]Idle_Army_For_Player,
-	Active_Armys:  [len(Active_Army)]uint,
+	Active_Armies:  [len(Active_Army)]uint,
 	owner:              ^Player,
 	factory_damage:     uint,
 	factory_max_damage: uint,
 	bombard_max_damage: uint,
-	lands_2_moves_away: sa.Small_Array(LANDS_COUNT, Land_2_Moves_Away),
+	lands_2_moves_away: sa.Small_Array(len(LANDS_DATA), Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,
 	original_owner:     ^Player,
 	value:              uint,
-	land_distances:		 [LANDS_COUNT]uint,
+	land_distances:		 [len(LANDS_DATA)]uint,
 	land_index:         int,
 }
 
@@ -46,7 +45,7 @@ L2S_2_Moves_Away :: struct {
 }
 
 //  PACIFIC | USA | ATLANTIC | ENG | BALTIC | GER | RUS | JAP | PAC
-LANDS_STRINGS := [?]Land_Strings {
+LANDS_DATA := [?]Land_Data {
 	{name = "Washington", owner = "USA", value = 10},
 	{name = "London", owner = "Eng", value = 8},
 	{name = "Berlin", owner = "Ger", value = 10},
@@ -56,7 +55,7 @@ LANDS_STRINGS := [?]Land_Strings {
 LAND_CONNECTIONS := [?][2]string{{"Berlin", "Moscow"}}
 
 get_land_idx_from_string :: proc(land_name: string) -> (land_idx: int, ok: bool) {
-	for land, land_idx in LANDS_STRINGS {
+	for land, land_idx in LANDS_DATA {
 		if strings.compare(land.name, land_name) == 0 {
 			return land_idx, true
 		}
@@ -65,7 +64,7 @@ get_land_idx_from_string :: proc(land_name: string) -> (land_idx: int, ok: bool)
 	return 0, false
 }
 initialize_land_connections :: proc(lands: ^Lands) -> (ok: bool) {
-	for land, land_idx in LANDS_STRINGS {
+	for land, land_idx in LANDS_DATA {
 		lands[land_idx].name = land.name
 	}
 	for connection in LAND_CONNECTIONS {
@@ -79,7 +78,7 @@ initialize_land_connections :: proc(lands: ^Lands) -> (ok: bool) {
 initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 	// Floyd-Warshall algorithm
 	// Initialize distances array to Infinity
-	distances: [LANDS_COUNT][LANDS_COUNT]uint
+	distances: [len(LANDS_DATA)][len(LANDS_DATA)]uint
 	INFINITY :: 255
 	mem.set(&distances, INFINITY, len(distances))
 	for &land, land_idx in lands {
@@ -90,9 +89,9 @@ initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 			distances[land_idx][adjacent_land.land_index] = 1
 		}
 	}
-	for mid_idx in 0 ..< LANDS_COUNT {
-		for start_idx in 0 ..< LANDS_COUNT {
-			for end_idx in 0 ..< LANDS_COUNT {
+	for mid_idx in 0 ..< len(LANDS_DATA) {
+		for start_idx in 0 ..< len(LANDS_DATA) {
+			for end_idx in 0 ..< len(LANDS_DATA) {
 				new_dist := distances[start_idx][mid_idx] + distances[mid_idx][end_idx]
 				if new_dist < distances[start_idx][end_idx] {
 					distances[start_idx][end_idx] = new_dist
@@ -118,7 +117,7 @@ initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 	}
 }
 
-initialize_canals :: proc(lands: ^[LANDS_COUNT]Land) -> (ok: bool) {
+initialize_canals :: proc(lands: ^[len(LANDS_DATA)]Land) -> (ok: bool) {
 	// convert canal_state to a bitmask and loop through CANALS for those
 	// enabled for example if canal_state is 0, do not process any items in
 	// CANALS, if canal_state is 1, process the first item in CANALS, if
@@ -144,5 +143,34 @@ initialize_canals :: proc(lands: ^[LANDS_COUNT]Land) -> (ok: bool) {
 		land2_idx := get_land_idx_from_string(canal.lands[1]) or_return
 		Canal_Lands[canal_idx] = {&lands[land1_idx], &lands[land2_idx]}
 	}
+	return true
+}
+
+conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
+	player_idx := gc.current_turn.index
+	team := gc.current_turn.team
+	enemy_team_idx := gc.current_turn.team.enemy_team.index
+	old_owner := dst_land.owner
+	if old_owner.captial.territory_index == dst_land.territory_index {
+		gc.current_turn.money += old_owner.money
+		old_owner.money = 0
+	}
+	old_owner.income_per_turn -= dst_land.value
+	new_owner := gc.current_turn
+	if team.is_allied[dst_land.original_owner.index] {
+		new_owner = dst_land.original_owner
+	}
+	dst_land.owner = new_owner
+	new_owner.income_per_turn += dst_land.value
+	if dst_land.factory_max_damage == 0 {
+		return true
+	}
+	sa.push(&new_owner.factory_locations, dst_land)
+	index, found := slice.linear_search(sa.slice(&old_owner.factory_locations), dst_land)
+	if !found {
+		fmt.eprint("factory conquered, but not found in owned factory locations")
+		return false
+	}
+	sa.unordered_remove(&old_owner.factory_locations, index)
 	return true
 }

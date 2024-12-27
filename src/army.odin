@@ -45,13 +45,13 @@ move_army :: proc(
 	src_unit: Active_Army,
 	src_land: ^Land,
 ) {
-	dst_land.Active_Armys[dst_unit] += 1
+	dst_land.Active_Armies[dst_unit] += 1
 	dst_land.Idle_Armys[player.index][Active_Army_To_Idle[dst_unit]] += 1
 	dst_land.teams_unit_count[player.team.index] += 1
-	src_land.Active_Armys[src_unit] -= 1
+	src_land.Active_Armies[src_unit] -= 1
 	src_land.Idle_Armys[player.index][Active_Army_To_Idle[dst_unit]] -= 1
 	src_land.teams_unit_count[player.team.index] -= 1
-	src_land.Active_Armys[src_unit] -= 1
+	src_land.Active_Armies[src_unit] -= 1
 }
 
 add_valid_large_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {

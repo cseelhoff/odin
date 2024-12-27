@@ -45,10 +45,10 @@ move_plane :: proc(
 	src_air: ^Territory,
 ) {
 	dst_air.Active_Planes[dst_unit] += 1
-	dst_air.Idle_Plane_units[player.index][Active_Army_To_Idle[dst_unit]] += 1
+	dst_air.Idle_Planes[player.index][Active_Army_To_Idle[dst_unit]] += 1
 	dst_air.teams_unit_count[player.team.index] += 1
 	src_air.Active_Planes[src_unit] -= 1
-	src_air.Idle_Plane_units[player.index][Active_Army_To_Idle[dst_unit]] -= 1
+	src_air.Idle_Planes[player.index][Active_Army_To_Idle[dst_unit]] -= 1
 	src_air.teams_unit_count[player.team.index] -= 1
 	src_air.Active_Planes[src_unit] -= 1
 }

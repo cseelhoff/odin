@@ -8,10 +8,10 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	clear_needed := false
 	defer if clear_needed do clear_move_history(gc)
 	for &src_land in gc.lands {
-		if src_land.Active_Armys[Active_Army.TANKS_UNMOVED] == 0 do continue
+		if src_land.Active_Armies[Active_Army.TANKS_UNMOVED] == 0 do continue
 		dst_air_idx := reset_valid_moves(gc, &src_sea, &clear_needed)
 		add_valid_tank_2_moves(gc, &src_land)
-		for src_land.Active_Armys[Active_Army.TANKS_UNMOVED] > 0 {
+		for src_land.Active_Armies[Active_Army.TANKS_UNMOVED] > 0 {
 			if gc.valid_moves.len > 1 {
 				if gc.answers_remaining == 0 do return true
 				dst_air_idx = get_move_input(
@@ -21,8 +21,8 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				)
 			}
 			update_move_history(gc, &src_land.territory, dst_air_idx)
-			if (dst_air_idx >= LANDS_COUNT) {
-				dst_sea := &gc.seas[dst_air_idx - LANDS_COUNT]
+			if (dst_air_idx >= len(LANDS_DATA)) {
+				dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 				load_large_transport(gc, .TANKS_UNMOVED, &src_land, dst_sea)
 				// recalculate valid moves since transport cargo has changed
 				sa.resize(&gc.valid_moves, 1)
@@ -44,9 +44,9 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			}
 			switch (landDistance) {
 			case 0:
-				src_land.Active_Armys[Active_Army.TANKS_0_MOVES] +=
-					src_land.Active_Armys[Active_Army.TANKS_UNMOVED]
-				src_land.Active_Armys[Active_Army.TANKS_UNMOVED] = 0
+				src_land.Active_Armies[Active_Army.TANKS_0_MOVES] +=
+					src_land.Active_Armies[Active_Army.TANKS_UNMOVED]
+				src_land.Active_Armies[Active_Army.TANKS_UNMOVED] = 0
 				break
 			case 1:
 				move_army(
@@ -77,13 +77,13 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	clear_needed := false
 	defer if (clear_needed) {clear_move_history(gc)}
 	for &src_land, src_land_idx in gc.lands {
-		if (src_land.Active_Armys[Active_Army.TANKS_1_MOVES] == 0) do continue
+		if (src_land.Active_Armies[Active_Army.TANKS_1_MOVES] == 0) do continue
 		clear_needed = true
 		sa.resize(&gc.valid_moves, 1)
 		dst_air_idx := src_land.territory_index
 		sa.set(&gc.valid_moves, 0, dst_air_idx)
 		add_valid_large_land_moves(gc, &src_land)
-		for src_land.Active_Armys[Active_Army.TANKS_1_MOVES] > 0 {
+		for src_land.Active_Armies[Active_Army.TANKS_1_MOVES] > 0 {
 			if (gc.valid_moves.len > 1) {
 				if (gc.answers_remaining == 0) do return true
 				dst_air_idx = get_move_input(
@@ -93,8 +93,8 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				)
 			}
 			update_move_history(gc, &src_land.territory, dst_air_idx)
-			if (dst_air_idx >= LANDS_COUNT) {
-				dst_sea := &gc.seas[dst_air_idx - LANDS_COUNT]
+			if (dst_air_idx >= len(LANDS_DATA)) {
+				dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 				load_large_transport(gc, .TANKS_1_MOVES, &src_land, dst_sea)
 				// recalculate valid moves since transport cargo has changed
 				sa.resize(&gc.valid_moves, 1)
@@ -109,9 +109,9 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				conquer_land(gc, &dst_land)
 			}
 			if landDistance == 0 {
-				src_land.Active_Armys[Active_Army.TANKS_0_MOVES] +=
-					src_land.Active_Armys[Active_Army.TANKS_1_MOVES]
-				src_land.Active_Armys[Active_Army.TANKS_1_MOVES] = 0
+				src_land.Active_Armies[Active_Army.TANKS_0_MOVES] +=
+					src_land.Active_Armies[Active_Army.TANKS_1_MOVES]
+				src_land.Active_Armies[Active_Army.TANKS_1_MOVES] = 0
 				break
 			}
 			move_army(

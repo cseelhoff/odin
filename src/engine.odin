@@ -81,38 +81,8 @@ reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory, clear_needed: 
 	clear_needed = true
 }
 
-conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
-	player_idx := gc.current_turn.index
-	team := gc.current_turn.team
-	enemy_team_idx := gc.current_turn.team.enemy_team.index
-	old_owner := dst_land.owner
-	if old_owner.captial.territory_index == dst_land.territory_index {
-		gc.current_turn.money += old_owner.money
-		old_owner.money = 0
-	}
-	old_owner.income_per_turn -= dst_land.value
-	new_owner := gc.current_turn
-	if team.is_allied[dst_land.original_owner.index] {
-		new_owner = dst_land.original_owner
-	}
-	dst_land.owner = new_owner
-	new_owner.income_per_turn += dst_land.value
-	if dst_land.factory_max_damage == 0 {
-		return true
-	}
-	sa.push(&new_owner.factory_locations, dst_land)
-	index, found := slice.linear_search(sa.slice(&old_owner.factory_locations), dst_land)
-	if !found {
-		fmt.eprint("factory conquered, but not found in owned factory locations")
-		return false
-	}
-	sa.unordered_remove(&old_owner.factory_locations, index)
-	return true
-}
-
 resolve_sea_battles::proc(gc: ^Game_Cache) -> (ok: bool) {}
 resolve_land_battles::proc(gc: ^Game_Cache) -> (ok: bool) {}
-move_aa_guns::proc(gc: ^Game_Cache) -> (ok: bool) {}
 buy_units::proc(gc: ^Game_Cache) -> (ok: bool) {}
 reset_units_fully::proc(gc: ^Game_Cache) -> (ok: bool) {}
 buy_factory::proc(gc: ^Game_Cache) -> (ok: bool) {}

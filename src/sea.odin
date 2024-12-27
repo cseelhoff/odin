@@ -18,8 +18,8 @@ Seas_2_Moves_Away :: sa.Small_Array(SEAS_COUNT, Sea_2_Moves_Away)
 
 Sea :: struct {
 	using territory:        Territory,
-	Idle_Ships:         [PLAYERS_COUNT]Idle_Sea_For_Player,
-	Active_Ships:       [len(Active_Ship)]uint,
+	Idle_Ships:             [PLAYERS_COUNT]Idle_Sea_For_Player,
+	Active_Ships:           [len(Active_Ship)]uint,
 	canal_paths:            Canal_Paths,
 	enemy_destroyers_total: uint,
 	enemy_submarines_total: uint,

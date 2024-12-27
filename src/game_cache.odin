@@ -7,7 +7,7 @@ MAX_VALID_MOVES :: 20
 
 Territory_Pointers :: [TERRITORIES_COUNT]^Territory
 SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory)
-SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land)
+SA_Land_Pointers :: sa.Small_Array(len(LANDS_DATA), ^Land)
 SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
 
 Game_Cache :: struct {
@@ -64,7 +64,7 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 		gc.lands[i].factory_max_damage = land.factory_max_damage
 		gc.lands[i].bombard_max_damage = land.bombard_max_damage
 		gc.lands[i].Idle_Armys = land.Idle_Armys
-		gc.lands[i].Active_Armys = land.Active_Armys
+		gc.lands[i].Active_Armies = land.Active_Armies
 		load_territory_from_state(&gc.lands[i].territory, &land.territory_state)
 	}
 	for &sea, i in gs.sea_state {
@@ -79,5 +79,5 @@ load_territory_from_state :: proc(territory: ^Territory, ts: ^Territory_State) {
 	territory.builds_left = ts.builds_left
 	territory.skipped_moves = ts.skipped_moves
 	territory.Active_Planes = ts.Active_Planes
-	territory.Idle_Plane_units = ts.Idle_Plane_units
+	territory.Idle_Planes = ts.Idle_Planes
 }
