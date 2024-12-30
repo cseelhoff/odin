@@ -19,7 +19,7 @@ Game_Cache :: struct {
 	territories:              Territory_Pointers,
 	valid_moves:              sa.Small_Array(MAX_VALID_MOVES, int),
 	unlucky_player:           ^Player,
-	current_turn:             ^Player,
+	cur_player:               ^Player,
 	seed:                     int,
 	canal_state:              int,
 	step_id:                  int,
@@ -56,7 +56,7 @@ initialize_map_constants :: proc(gc: ^Game_Cache) -> (ok: bool) {
 load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 	//gc.state = gs
 	gc.seed = gs.seed
-	gc.current_turn = &gc.players[gs.current_turn]
+	gc.cur_player = &gc.players[gs.cur_player]
 	for money, i in gs.money {
 		gc.players[i].money = money
 	}

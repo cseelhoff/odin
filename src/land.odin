@@ -147,16 +147,16 @@ initialize_canals :: proc(lands: ^[len(LANDS_DATA)]Land) -> (ok: bool) {
 }
 
 conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
-	player_idx := gc.current_turn.index
-	team := gc.current_turn.team
-	enemy_team_idx := gc.current_turn.team.enemy_team.index
+	player_idx := gc.cur_player.index
+	team := gc.cur_player.team
+	enemy_team_idx := gc.cur_player.team.enemy_team.index
 	old_owner := dst_land.owner
 	if old_owner.captial.territory_index == dst_land.territory_index {
-		gc.current_turn.money += old_owner.money
+		gc.cur_player.money += old_owner.money
 		old_owner.money = 0
 	}
 	old_owner.income_per_turn -= dst_land.value
-	new_owner := gc.current_turn
+	new_owner := gc.cur_player
 	if team.is_allied[dst_land.original_owner.index] {
 		new_owner = dst_land.original_owner
 	}

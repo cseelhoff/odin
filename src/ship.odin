@@ -192,7 +192,6 @@ move_dest_crus_bs :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Unmoved_Blockade_Ships {
 		gc.clear_needed = false
-		defer if gc.clear_needed do clear_move_history(gc)
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
 			dst_air_idx := reset_valid_moves(gc, &src_sea)
@@ -200,7 +199,7 @@ move_dest_crus_bs :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			for src_sea.active_ships[ship] > 0 {
 				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
 				dst_sea := gc.seas[dst_air_idx - len(LANDS_DATA)]
-				if dst_sea.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0 {
+				if dst_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 {
 					dst_sea.combat_status = .PRE_COMBAT
 				}
 				if src_sea == dst_sea {
@@ -208,9 +207,10 @@ move_dest_crus_bs :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					src_sea.active_ships[ship] = 0
 					break
 				}
-				move_ship(&dst_sea, Ships_Moved[ship], gc.current_turn, ship, &src_sea)
+				move_ship(&dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)
 			}
 		}
+		if gc.clear_needed do clear_move_history(gc)
 	}
 	return true
 }

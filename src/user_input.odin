@@ -12,7 +12,7 @@ import "core:strconv"
 // ) -> (
 // 	dst_air_idx: int,
 // ) {
-// 	if (PLAYER_DATA[gc.current_turn.index].is_human) {
+// 	if (PLAYER_DATA[gc.cur_player.index].is_human) {
 // 		fmt.print("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
 // 		for valid_move in sa.slice(&gc.valid_moves) {
 // 			fmt.print(gc.territories[valid_move].name, ", ")
@@ -25,7 +25,7 @@ import "core:strconv"
 get_retreat_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (dst_air_idx: int, ok: bool) {
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
-		if PLAYER_DATA[gc.current_turn.index].is_human {
+		if PLAYER_DATA[gc.cur_player.index].is_human {
 			fmt.print("Retreat From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
 				fmt.print(gc.territories[valid_move].name, ", ")
@@ -47,7 +47,7 @@ get_move_input :: proc(
 ) {
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
-		if PLAYER_DATA[gc.current_turn.index].is_human {
+		if PLAYER_DATA[gc.cur_player.index].is_human {
 			fmt.print("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
 				fmt.print(gc.territories[valid_move].name, ", ")

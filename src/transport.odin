@@ -143,7 +143,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					fmt.eprintln("Error: Invalid sea_distance: %d\n", sea_distance)
 					return false
 				}
-				move_ship(&dst_sea, ship_after_move, gc.current_turn, ship, &src_sea)
+				move_ship(&dst_sea, ship_after_move, gc.cur_player, ship, &src_sea)
 			}
 		}
 	}
@@ -174,7 +174,7 @@ load_large_transport :: proc(
 	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 	for transport in Transport_Can_Load_Large {
 		if dst_sea.active_ships[transport] > 0 {
-			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_army)
+			load_unit(src_land, dst_sea, transport, gc.cur_player.index, active_army)
 			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 			return
 		}
@@ -191,7 +191,7 @@ load_small_transport :: proc(
 	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
 	for transport in Transport_Can_Load_Small {
 		if dst_sea.active_ships[transport] > 0 {
-			load_unit(src_land, dst_sea, transport, gc.current_turn.index, active_army)
+			load_unit(src_land, dst_sea, transport, gc.cur_player.index, active_army)
 			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 			return
 		}
@@ -228,7 +228,7 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 					src_sea.active_ships[ship] = 0
 					break
 				}
-				move_ship(dst_sea, Ships_Moved[ship], gc.current_turn, ship, &src_sea)
+				move_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)
 			}
 		}
 	}
@@ -238,7 +238,7 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
 	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
 		if src_sea.skipped_moves[dst_sea.territory_index] ||
-		   dst_sea.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0 &&
+		   dst_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 &&
 			   dst_sea.combat_status != .PRE_COMBAT {
 			continue
 		}
@@ -247,7 +247,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	if max_distance == 1 do return
 	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
 		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] ||
-			   dst_sea_2_away.sea.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0 &&
+			   dst_sea_2_away.sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 &&
 				   dst_sea_2_away.sea.combat_status != .PRE_COMBAT) {
 			continue
 		}

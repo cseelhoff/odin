@@ -17,7 +17,6 @@ FIGHTER_MAX_MOVES :: 4
 move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	gc.clear_needed = false
-	defer if gc.clear_needed do clear_move_history(gc)
 	for &src_air in gc.territories {
 		if src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
 		if !gc.is_fighter_cache_current do refresh_can_fighters_land_here(gc)
@@ -27,7 +26,7 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			dst_air_idx = get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			airDistance := src_air.air_distances[dst_air_idx]
-			if (dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] > 0) {
+			if (dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0) {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
 				airDistance = FIGHTER_MAX_MOVES
@@ -35,12 +34,13 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			move_plane(
 				dst_air,
 				Fighter_After_Moves[airDistance],
-				gc.current_turn,
+				gc.cur_player,
 				.FIGHTER_UNMOVED,
 				src_air,
 			)
 		}
 	}
+	if gc.clear_needed do clear_move_history(gc)
 	return true
 }
 
@@ -59,12 +59,12 @@ refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
 	}
 	for &land in gc.lands {
 		// is allied owned and not recently conquered?
-		if gc.current_turn.team == land.owner.team &&
+		if gc.cur_player.team == land.owner.team &&
 		   land.combat_status == Combat_Status.NO_COMBAT {
 			fighter_can_land_here(&land.territory)
 		}
 		// check for possiblity to build carrier under fighter
-		if (land.owner == gc.current_turn && land.factory_max_damage > 0) {
+		if (land.owner == gc.cur_player && land.factory_max_damage > 0) {
 			for &sea in sa.slice(&land.adjacent_seas) {
 				fighter_can_land_here(&sea.territory)
 			}
@@ -108,7 +108,7 @@ add_valid_fighter_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
 
 add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	if dst_air.can_fighter_land_here ||
-	   dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] != 0 {
+	   dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] != 0 {
 		add_move_if_not_skipped(gc, src_air, dst_air)
 	}
 }

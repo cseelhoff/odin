@@ -7,7 +7,7 @@ import "core:strconv"
 main :: proc() {
 	fmt.println("Starting CAAA")
 	iterations := 1_000_000_000
-	if len(os.args) > 1 {
+	if len(os.args) >= 2 {
 		iterations, _ = strconv.parse_int(os.args[1])
 	}
 	fmt.println("Running ", iterations, " iterations")

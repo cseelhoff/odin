@@ -4,8 +4,7 @@ import "core:fmt"
 import "core:mem"
 import "core:slice"
 
-NDEBUG :: false
-when NDEBUG {
+when ODIN_DEBUG {
 	debug_checks :: proc(gc: ^Game_Cache) {
 		// No-op
 	}
@@ -24,7 +23,7 @@ play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	move_tanks_2(gc) or_return
 	move_tanks_1(gc) or_return
 	move_artillery(gc) or_return
-	move_infantry(gc) or_return	
+	move_infantry(gc) or_return
 	move_transports(gc) or_return
 	resolve_sea_battles(gc) or_return
 	unload_transports(gc) or_return
@@ -82,9 +81,8 @@ reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory) -> (dst_air_id
 }
 
 allied_fighters_exist :: proc(gc: ^Game_Cache, territory: ^Territory) -> bool {
-	for player in gc.players {
-		if player.team == gc.current_turn.team &&
-		   territory.idle_planes[Idle_Plane.FIGHTER][player.index] > 0 {
+	for player in sa.slice(&gc.cur_player.team.players) {
+		if territory.idle_planes[Idle_Plane.FIGHTER][player.index] > 0 {
 			return true
 		}
 	}
@@ -102,18 +100,15 @@ no_defender_threat_exists :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 
 get_allied_subs_count :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> (allied_subs: int) {
 	allied_subs = 0
-	for player in gc.players {
-		if player.team == gc.current_turn.team {
-			allied_subs += src_sea.idle_ships[player.index][Idle_Ship.SUB]
-		}
+	for player in sa.slice(&gc.cur_player.team.players) {
+		allied_subs += src_sea.idle_ships[player.index][Idle_Ship.SUB]
 	}
 	return
 }
 
 do_allied_destroyers_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
-	for player in gc.players {
-		if player.team == gc.current_turn.team &&
-		   src_sea.idle_ships[player.index][Idle_Ship.DESTROYER] > 0 {
+	for player in sa.slice(&gc.cur_player.team.players) {
+		if src_sea.idle_ships[player.index][Idle_Ship.DESTROYER] > 0 {
 			return true
 		}
 	}
@@ -133,7 +128,7 @@ disable_bombardment :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 }
 
 non_dest_non_sub_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
-	player_idx := gc.current_turn.index
+	player_idx := gc.cur_player.index
 	return(
 		src_sea.active_ships[Active_Ship.CARRIER_0_MOVES] > 0 ||
 		src_sea.idle_ships[player_idx][Idle_Ship.CRUISER] > 0 ||
@@ -147,7 +142,7 @@ non_dest_non_sub_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 build_sea_retreat_options :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 	// ensure no enemy fighters exist
 	if src_sea.enemy_blockade_total == 0 &&
-		   src_sea.teams_unit_count[gc.current_turn.team.enemy_team.index] ==
+		   src_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] ==
 			   src_sea.enemy_submarines_total ||
 	   src_sea.active_ships[Active_Ship.SUB_0_MOVES] > 0 ||
 	   src_sea.active_ships[Active_Ship.DESTROYER_0_MOVES] > 0 ||
@@ -166,8 +161,8 @@ build_sea_retreat_options :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 
 sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: int) {
 	dst_sea := &gc.seas[dst_air_idx - len(gc.lands)]
-	player_idx := gc.current_turn.index
-	team_idx := gc.current_turn.team.index
+	player_idx := gc.cur_player.index
+	team_idx := gc.cur_player.team.index
 	for active_ship in Retreatable_Ships {
 		number_of_ships := src_sea.active_ships[active_ship]
 		dst_sea.active_ships[Ships_After_Retreat[active_ship]] += number_of_ships
@@ -181,7 +176,7 @@ sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: int) {
 }
 
 do_sea_targets_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
-	enemy_team_idx := gc.current_turn.team.enemy_team.index
+	enemy_team_idx := gc.cur_player.team.enemy_team.index
 	if src_sea.active_ships[Active_Ship.DESTROYER_0_MOVES] > 0 {
 		return src_sea.teams_unit_count[enemy_team_idx] > 0
 	} else if non_dest_non_sub_exist(gc, src_sea) {
@@ -197,37 +192,37 @@ do_sea_targets_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 
 destroy_vulnerable_transports :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 	// Perhaps it may be possible to have enemy fighters and friendly subs here?
-	player_idx := gc.current_turn.index
-	if src_sea.teams_unit_count[gc.current_turn.team.enemy_team.index] >
+	player_idx := gc.cur_player.index
+	if src_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] >
 	   src_sea.enemy_submarines_total {
 		// I dont think this is reachable
 		fmt.eprintln("destroy_vulnerable_transports: unreachable code")
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_EMPTY_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_EMPTY] = 0
 		src_sea.active_ships[Active_Ship.TRANS_EMPTY_0_MOVES] = 0
 
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_1I_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1I] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1I_0_MOVES] = 0
 
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_1A_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1A] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1A_0_MOVES] = 0
 
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_1T_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1T] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1T_0_MOVES] = 0
 
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_1I_1A_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1I_1A] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1I_1A_0_MOVES] = 0
 
-		src_sea.teams_unit_count[gc.current_turn.team.index] -=
+		src_sea.teams_unit_count[gc.cur_player.team.index] -=
 			src_sea.active_ships[Active_Ship.TRANS_1I_1T_0_MOVES]
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1I_1T] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1I_1T_0_MOVES] = 0
@@ -236,8 +231,8 @@ destroy_vulnerable_transports :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 
 destroy_defender_transports :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 	if do_sea_targets_exist(gc, src_sea) {
-		enemy_team_idx := gc.current_turn.team.enemy_team.index
-		for enemy_player in sa.slice(&gc.current_turn.team.enemy_team.players) {
+		enemy_team_idx := gc.cur_player.team.enemy_team.index
+		for enemy_player in sa.slice(&gc.cur_player.team.enemy_team.players) {
 			enemy_player_idx := enemy_player.index
 			src_sea.teams_unit_count[enemy_team_idx] -=
 				src_sea.idle_ships[enemy_player_idx][Idle_Ship.TRANS_EMPTY]
@@ -270,7 +265,7 @@ get_attacker_hits :: proc(gc: ^Game_Cache, attacker_damage: int) -> (attacker_hi
 	attacker_hits = attacker_damage / DICE_SIDES
 	// todo why does this check for 2 answers remaining?
 	if gc.answers_remaining <= 1 {
-		if gc.current_turn.team != gc.unlucky_player.team { 	// attacker is lucky
+		if gc.cur_player.team != gc.unlucky_player.team { 	// attacker is lucky
 			attacker_hits += 0 < attacker_damage % DICE_SIDES ? 1 : 0 // no dice, round up
 		}
 	} else {
@@ -284,7 +279,7 @@ get_attacker_hits :: proc(gc: ^Game_Cache, attacker_damage: int) -> (attacker_hi
 get_defender_hits :: proc(gc: ^Game_Cache, defender_damage: int) -> (defender_hits: int) {
 	defender_hits = defender_damage / DICE_SIDES
 	if gc.answers_remaining <= 1 {
-		if gc.current_turn.team == gc.unlucky_player.team { 	// attacker is unlucky
+		if gc.cur_player.team == gc.unlucky_player.team { 	// attacker is unlucky
 			defender_hits += 0 < defender_damage % DICE_SIDES ? 1 : 0 // no dice, round up
 		}
 	} else {
@@ -298,7 +293,7 @@ get_defender_hits :: proc(gc: ^Game_Cache, defender_damage: int) -> (defender_hi
 resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for &src_sea in gc.seas {
 		if src_sea.combat_status == .NO_COMBAT do continue
-		//if src_sea.teams_unit_count[gc.current_turn.team.index] == 0 ||
+		//if src_sea.teams_unit_count[gc.cur_player.team.index] == 0 ||
 		if no_defender_threat_exists(gc, &src_sea) {
 			destroy_defender_transports(gc, &src_sea)
 			src_sea.combat_status = .NO_COMBAT
@@ -342,7 +337,7 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			)
 			remove_sea_defenders(gc, &src_sea, attacker_hits)
 			// can't retreat if no allied units exist
-			if src_sea.teams_unit_count[gc.current_turn.team.index] == 0 {
+			if src_sea.teams_unit_count[gc.cur_player.team.index] == 0 {
 				src_sea.combat_status = .NO_COMBAT
 				break
 			}
@@ -359,21 +354,30 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 resolve_land_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }
-buy_units :: proc(gc: ^Game_Cache) -> (ok: bool) {return false
+buy_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
 }
-reset_units_fully :: proc(gc: ^Game_Cache) -> (ok: bool) {return false
+reset_units_fully :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
 }
-buy_factory :: proc(gc: ^Game_Cache) -> (ok: bool) {return false
+buy_factory :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
 }
-collect_money :: proc(gc: ^Game_Cache) -> (ok: bool) {return false
+collect_money :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
 }
-rotate_turns :: proc(gc: ^Game_Cache) -> (ok: bool) {return false
+rotate_turns :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	return false
 }
-remove_sea_attackers :: proc(gc: ^Game_Cache, src_sea: ^Sea, hits: int) -> (ok: bool) {return false
+remove_sea_attackers :: proc(gc: ^Game_Cache, src_sea: ^Sea, hits: int) -> (ok: bool) {
+	return false
 }
-remove_sea_defenders :: proc(gc: ^Game_Cache, src_sea: ^Sea, hits: int) -> (ok: bool) {return false
+remove_sea_defenders :: proc(gc: ^Game_Cache, src_sea: ^Sea, hits: int) -> (ok: bool) {
+	return false
 }
-get_attacker_ship_damage :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> (damage: int) {return 0
+get_attacker_ship_damage :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> (damage: int) {
+	return 0
 }
-get_defender_ship_damage :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> (damage: int) {return 0
+get_defender_ship_damage :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> (damage: int) {
+	return 0
 }

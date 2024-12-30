@@ -5,8 +5,6 @@ import "core:fmt"
 import "core:os"
 
 save_json :: proc(game_state: Game_State) {
-	fmt.println("Some of Odin's builtin constants")
-
 	path := len(os.args) > 1 ? os.args[1] : "game_state.json"
 
 	fmt.println("Odin:")

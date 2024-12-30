@@ -19,7 +19,6 @@ BOMBER_MAX_MOVES :: 6
 move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	gc.clear_needed = false
-	defer if gc.clear_needed do clear_move_history(gc)
 	for &src_air in gc.territories {
 		if src_air.active_planes[Active_Plane.BOMBER_UNMOVED] == 0 do continue
 		if !gc.is_bomber_cache_current do refresh_can_bombers_land_here(gc)
@@ -34,9 +33,10 @@ move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			} else {
 				air_dist = BOMBER_MAX_MOVES
 			}
-			move_plane(dst_air, Bomber_Moves[air_dist], gc.current_turn, .BOMBER_UNMOVED, src_air)
+			move_plane(dst_air, Bomber_Moves[air_dist], gc.cur_player, .BOMBER_UNMOVED, src_air)
 		}
 	}
+	if gc.clear_needed do clear_move_history(gc)
 	return true
 }
 
@@ -61,7 +61,7 @@ refresh_can_bombers_land_here :: proc(gc: ^Game_Cache) {
 	for &land in gc.lands {
 		// is allied owned and not recently conquered?
 		//Since bombers happen first, we can assume that the land is not recently conquered
-		if gc.current_turn.team == land.owner.team { 	//&& land.combat_status == .NO_COMBAT {
+		if gc.cur_player.team == land.owner.team { 	//&& land.combat_status == .NO_COMBAT {
 			bomber_can_land_here(&land)
 		}
 	}
@@ -97,7 +97,7 @@ add_valid_bomber_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
 add_meaningful_bomber_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	terr_idx := dst_air.territory_index
 	if dst_air.can_bomber_land_here ||
-	   dst_air.teams_unit_count[gc.current_turn.team.enemy_team.index] != 0 ||
+	   dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] != 0 ||
 	   terr_idx < len(LANDS_DATA) &&
 		   gc.lands[terr_idx].factory_damage < gc.lands[terr_idx].factory_max_damage * 2 {
 		add_move_if_not_skipped(gc, src_air, dst_air)

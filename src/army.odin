@@ -62,7 +62,7 @@ add_valid_large_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	}
 	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
-		idle_ships := dst_sea.idle_ships[gc.current_turn.index]
+		idle_ships := dst_sea.idle_ships[gc.cur_player.index]
 		if (idle_ships[Idle_Ship.TRANS_EMPTY] == 0 &&
 			   idle_ships[Idle_Ship.TRANS_1I] == 0) { 	// large
 			continue

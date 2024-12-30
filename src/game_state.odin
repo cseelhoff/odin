@@ -5,7 +5,7 @@ Idle_Army_For_Player :: [len(Idle_Army)]int
 Idle_Sea_For_Player :: [len(Idle_Ship)]int
 
 Game_State :: struct {
-	current_turn: int,
+	cur_player: int,
 	seed:         int,
 	money:        [PLAYERS_COUNT]int,
 	land_state:   #soa[len(LANDS_DATA)]Land_State,

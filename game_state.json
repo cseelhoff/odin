@@ -1,5 +1,5 @@
 {
-	"current_turn": 1,
+	"cur_player": 1,
 	"seed": 0,
 	"money": [
 		0,
