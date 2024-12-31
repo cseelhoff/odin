@@ -109,7 +109,7 @@ move_next_army_in_land :: proc(gc: ^Game_Cache, army: Active_Army, src_land: ^La
 
 blitz_checks :: proc(
 	gc: ^Game_Cache,
-	dst_air_idx: int,
+	dst_air_idx: Air_ID,
 	dst_land: ^Land,
 	army: Active_Army,
 	src_land: ^Land,
@@ -144,38 +144,38 @@ add_if_boat_available :: proc(gc: ^Game_Cache, src_land: ^Land, dst_sea: ^Sea, a
 	for transport in Idle_Ship_Space[Army_Size[army]] {
 		if idle_ships[transport] > 0 {
 			if (!src_land.skipped_moves[dst_sea.territory_index]) {
-				sa.push(&gc.valid_moves, dst_sea.territory_index)
+				sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 				break
 			}
 		}
 	}
 }
 
-are_midlands_blocked :: proc(mid_lands: ^Mid_Lands, enemy_team_idx: int) -> bool {
+are_midlands_blocked :: proc(mid_lands: ^Mid_Lands, enemy_team_idx: Team_ID) -> bool {
 	for mid_land in sa.slice(mid_lands) {
 		if mid_land.team_units[enemy_team_idx] == 0 do return false
 	}
 	return true
 }
 
-add_valid_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army) {
+add_valid_army_moves_1 :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army) {
 	for dst_land in sa.slice(&src_land.adjacent_lands) {
-		if (src_land.skipped_moves[dst_land.territory_index]) do continue
-		sa.push(&gc.valid_moves, dst_land.territory_index)
+		if src_land.skipped_moves[dst_land.territory_index] do continue
+		sa.push(&gc.valid_moves, int(dst_land.territory_index))
 	}
-	// check for moving from land to sea (one move away)
 	for dst_sea in sa.slice(&src_land.adjacent_seas) {
 		add_if_boat_available(gc, src_land, dst_sea, army)
 	}
-	if army != .TANK_UNMOVED do return
-	// check for moving from land to land (two moves away)
+}
+
+add_valid_army_moves_2 :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army) {
 	enemy_team_idx := gc.cur_player.team.enemy_team.index
 	for &dst_land_2_away in sa.slice(&src_land.lands_2_moves_away) {
 		if src_land.skipped_moves[dst_land_2_away.land.territory_index] ||
 		   are_midlands_blocked(&dst_land_2_away.mid_lands, enemy_team_idx) {
 			continue
 		}
-		sa.push(&gc.valid_moves, dst_land_2_away.land.territory_index)
+		sa.push(&gc.valid_moves, int(dst_land_2_away.land.territory_index))
 	}
 	// check for moving from land to sea (two moves away)
 	for &dst_sea_2_away in sa.slice(&src_land.seas_2_moves_away) {
@@ -185,7 +185,12 @@ add_valid_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army
 		}
 		add_if_boat_available(gc, src_land, dst_sea_2_away.sea, army)
 	}
+}
 
+add_valid_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army) {
+	add_valid_army_moves_1(gc, src_land, army)	
+	if army != .TANK_UNMOVED do return
+	add_valid_army_moves_2(gc, src_land, army)
 }
 
 skip_army :: proc(src_land: ^Land, dst_land: ^Land, army: Active_Army) -> (ok: bool) {
@@ -199,12 +204,11 @@ check_load_transport :: proc(
 	gc: ^Game_Cache,
 	army: Active_Army,
 	src_land: ^Land,
-	dst_air_idx: int,
+	dst_air_idx: Air_ID,
 ) -> (
 	ok: bool,
 ) {
-	if dst_air_idx < len(LANDS_DATA) do return false
-	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
+	dst_sea := get_sea(gc, dst_air_idx) or_return
 	load_available_transport(army, src_land, dst_sea, gc.cur_player.index)
 	sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 	add_valid_army_moves(gc, src_land, army) //reset valid moves since transport cargo has changed
@@ -215,7 +219,7 @@ load_available_transport :: proc(
 	army: Active_Army,
 	src_land: ^Land,
 	dst_sea: ^Sea,
-	player_idx: int,
+	player_idx: Player_ID,
 ) {
 	for transport in Active_Ship_Space[Army_Size[army]] {
 		if dst_sea.active_ships[transport] > 0 {
@@ -231,7 +235,7 @@ load_specific_transport :: proc(
 	dst_sea: ^Sea,
 	ship: Active_Ship,
 	army: Active_Army,
-	player_idx: int,
+	player_idx: Player_ID,
 ) {
 	idle_army := Active_Army_To_Idle[army]
 	new_ship := Transport_Load_Unit[idle_army][ship]

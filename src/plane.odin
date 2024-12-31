@@ -87,7 +87,7 @@ skip_plane :: proc(
 	src_air: ^Territory,
 	dst_air: ^Territory,
 	plane: Active_Plane,
-	enemy_idx: int,
+	enemy_idx: Team_ID,
 ) -> (
 	ok: bool,
 ) {

@@ -25,12 +25,12 @@ PLAYER_DATA := [?]Player_Data {
 Players :: [PLAYERS_COUNT]Player
 Player :: struct {
 	factory_locations:  sa.Small_Array(len(LANDS_DATA), ^Land),
-	captial:      ^Land,
+	captial:            ^Land,
 	team:               ^Team,
 	money:              int,
 	income_per_turn:    int,
 	total_player_units: int,
-	index:              int,
+	index:              Player_ID,
 }
 
 TEAM_STRINGS := [?]string{"Allies", "Axis"}
@@ -38,11 +38,24 @@ TEAMS_COUNT :: len(TEAM_STRINGS)
 
 Teams :: [TEAMS_COUNT]Team
 Team :: struct {
-	index:         int,
+	index:         Team_ID,
 	players:       SA_Player_Pointers,
 	enemy_players: SA_Player_Pointers,
 	enemy_team:    ^Team, // not an array, since assumption is 2 teams
 	is_allied:     [PLAYERS_COUNT]bool,
+}
+
+Player_ID :: enum {
+	Rus,
+	Ger,
+	Eng,
+	Jap,
+	USA,
+}
+
+Team_ID :: enum {
+	Allies,
+	Axis,
 }
 
 get_player_idx_from_string :: proc(player_name: string) -> (player_idx: int, ok: bool) {
@@ -57,7 +70,7 @@ get_player_idx_from_string :: proc(player_name: string) -> (player_idx: int, ok:
 
 initialize_teams :: proc(teams: ^Teams, players: ^Players) {
 	for &team, team_idx in teams {
-		team.index = team_idx
+		team.index = Team_ID(team_idx)
 		for &other_team in teams {
 			if &team != &other_team {
 				team.enemy_team = &other_team
@@ -69,7 +82,7 @@ initialize_teams :: proc(teams: ^Teams, players: ^Players) {
 				sa.push(&team.players, &player)
 				team.is_allied[player_idx] = true
 				player.team = &team
-				player.index = player_idx
+				player.index = Player_ID(player_idx)
 			} else {
 				sa.push(&team.enemy_players, &player)
 				team.is_allied[player_idx] = false

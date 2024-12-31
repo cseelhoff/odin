@@ -33,7 +33,7 @@ Land :: struct {
 	original_owner:     ^Player,
 	value:              int,
 	land_distances:     [len(LANDS_DATA)]int,
-	land_index:         int,
+	land_index:         Land_ID,
 }
 
 Land_2_Moves_Away :: struct {
@@ -44,6 +44,23 @@ Land_2_Moves_Away :: struct {
 L2S_2_Moves_Away :: struct {
 	sea:       ^Sea,
 	mid_lands: Mid_Lands,
+}
+
+Land_ID :: enum {
+	Washington,
+	London,
+	Berlin,
+	Moscow,
+	Tokyo,
+}
+
+get_land :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> (land: ^Land, ok: bool) {
+	land_idx := int(air_idx)
+	if land_idx >= len(LANDS_DATA) {
+		fmt.eprintln("Error: Land not found: %d\n", land_idx)
+		return &gc.lands[0], false
+	}
+	return &gc.lands[land_idx], true
 }
 
 //  PACIFIC | USA | ATLANTIC | ENG | BALTIC | GER | RUS | JAP | PAC

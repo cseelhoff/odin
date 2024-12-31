@@ -105,7 +105,7 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			add_valid_transport_moves(gc, &src_sea, 2)
 			for src_sea.active_ships[ship] > 0 {
 				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				dst_sea_idx := dst_air_idx - len(LANDS_DATA)
+				dst_sea_idx := get_sea_id(dst_air_idx) or_return
 				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 				dst_sea := &gc.seas[dst_sea_idx]
 				if dst_sea.combat_status == .PRE_COMBAT {
@@ -147,7 +147,7 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			add_valid_transport_moves(gc, &src_sea, Ships_Moves[ship])
 			for src_sea.active_ships[ship] > 0 {
 				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				dst_sea_idx := dst_air_idx - len(LANDS_DATA)
+				dst_sea_idx := get_sea_id(dst_air_idx) or_return
 				dst_sea := &gc.seas[dst_sea_idx]
 				if &src_sea == dst_sea {
 					src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
@@ -169,7 +169,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 			   dst_sea.combat_status != .PRE_COMBAT {
 			continue
 		}
-		sa.push(&gc.valid_moves, dst_sea.territory_index)
+		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 	}
 	if max_distance == 1 do return
 	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
@@ -180,7 +180,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 		}
 		for mid_sea in sa.slice(&dst_sea_2_away.mid_seas) {
 			if (!mid_sea.sea_path_blocked) {
-				sa.push(&gc.valid_moves, dst_sea_2_away.sea.territory_index)
+				sa.push(&gc.valid_moves, int(dst_sea_2_away.sea.territory_index))
 				break
 			}
 		}

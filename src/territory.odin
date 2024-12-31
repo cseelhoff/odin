@@ -29,7 +29,7 @@ Territory :: struct {
 	airs_5_moves_away:          SA_Territory_Pointers,
 	airs_6_moves_away:          SA_Territory_Pointers,
 	team_units:                 [TEAMS_COUNT]int,
-	territory_index:            int,
+	territory_index:            Air_ID,
 	enemy_fighters_total:       int,
 	can_fighter_land_here:      bool, //bitset?
 	can_fighter_land_in_1_move: bool,
@@ -41,6 +41,21 @@ Territory :: struct {
 Coastal_Connection_String :: struct {
 	land: string,
 	sea:  string,
+}
+
+Air_ID :: enum {
+	Washington_Air,
+	London_Air,
+	Berlin_Air,
+	Moscow_Air,
+	Tokyo_Air,
+	Pacific_Air,
+	Atlantic_Air,
+	Baltic_Air,
+}
+
+is_land :: proc(terr: ^Territory) -> bool {
+	return int(terr.territory_index) < len(LANDS_DATA)
 }
 
 COASTAL_CONNECTIONS := [?]Coastal_Connection_String {
@@ -56,13 +71,13 @@ COASTAL_CONNECTIONS := [?]Coastal_Connection_String {
 
 initialize_territories :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
 	for &land, land_idx in lands {
-		land.land_index = land_idx
-		land.territory_index = land_idx
+		land.land_index = Land_ID(land_idx)
+		land.territory_index = Air_ID(land_idx)
 		territories[land.territory_index] = &land.territory
 	}
 	for &sea, sea_idx in seas {
-		sea.sea_index = sea_idx
-		sea.territory_index = sea_idx + len(LANDS_DATA)
+		sea.sea_index = Sea_ID(sea_idx)
+		sea.territory_index = Air_ID(sea_idx + len(LANDS_DATA))
 		territories[sea.territory_index] = &sea.territory
 	}
 }

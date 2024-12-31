@@ -25,7 +25,7 @@ Sea :: struct {
 	enemy_submarines_total: int,
 	enemy_blockade_total:   int,
 	allied_carriers:        int,
-	sea_index:              int,
+	sea_index:              Sea_ID,
 	sea_path_blocked:       bool,
 	sub_path_blocked:       bool,
 }
@@ -36,7 +36,7 @@ Canal :: struct {
 }
 
 Sea_Distances :: struct {
-	sea_distance:      [SEAS_COUNT]uint,
+	sea_distance:      [SEAS_COUNT]int,
 	seas_2_moves_away: Seas_2_Moves_Away,
 	adjacent_seas:     SA_Adjacent_S2S,
 }
@@ -46,10 +46,33 @@ Sea_2_Moves_Away :: struct {
 	mid_seas: sa.Small_Array(MAX_PATHS_TO_SEA, ^Sea),
 }
 
+Sea_ID :: enum {
+	Pacific,
+	Atlantic,
+	Baltic,
+}
+
 SEAS_STRINGS :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
 CANALS :: [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
+
+get_sea_id :: proc(air_idx: Air_ID) -> (sea_idx: Sea_ID, ok: bool) {
+	if int(air_idx) <= len(LANDS_DATA) {
+		fmt.eprintln("Error: Sea not found for Air_ID: %d\n", air_idx)
+		return Sea_ID(int(air_idx)), false
+	}
+	return Sea_ID(int(air_idx) - len(LANDS_DATA)), true
+}
+
+get_sea::proc(gc: ^Game_Cache, air_idx: Air_ID) -> (sea: ^Sea, ok: bool) {
+	if int(air_idx) <= len(LANDS_DATA) {
+		fmt.eprintln("Error: Sea not found for Air_ID: %d\n", air_idx)
+		return &gc.seas[0], false
+	}
+	sea_idx := int(air_idx) - len(LANDS_DATA)
+	return &gc.seas[sea_idx], true
+}
 
 get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
 	for sea_string, sea_idx in SEAS_STRINGS {
@@ -92,7 +115,7 @@ initialize_seas_2_moves_away :: proc(seas: ^Seas) {
 	for canal_state in 0 ..< CANAL_STATES {
 		// Floyd-Warshall algorithm
 		// Initialize distances array to Infinity
-		distances: [SEAS_COUNT][SEAS_COUNT]uint
+		distances: [SEAS_COUNT][SEAS_COUNT]int
 		INFINITY :: 255
 		mem.set(&distances, INFINITY, len(distances))
 		for &sea, sea_idx in seas {

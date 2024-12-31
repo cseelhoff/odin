@@ -36,16 +36,16 @@ play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 
 add_move_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	if !src_air.skipped_moves[dst_air.territory_index] {
-		sa.push(&gc.valid_moves, dst_air.territory_index)
+		sa.push(&gc.valid_moves, int(dst_air.territory_index))
 	}
 }
 
-update_move_history :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air_idx: int) {
+update_move_history :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air_idx: Air_ID) {
 	// get a list of newly skipped valid_actions
 	assert(gc.valid_moves.len > 0)
 	valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
 	for {
-		if (valid_action == dst_air_idx) do break
+		if (Air_ID(valid_action) == dst_air_idx) do break
 		src_air.skipped_moves[valid_action] = true
 		//apply_skip(gc, src_air, gc.territories[valid_action])
 		valid_action = sa.pop_back(&gc.valid_moves)
@@ -70,7 +70,7 @@ reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory) {// -> (dst_ai
 	//dst_air_idx = territory.territory_index
 	sa.resize(&gc.valid_moves, 1)
 	//sa.set(&gc.valid_moves, 0, dst_air_idx)
-	sa.set(&gc.valid_moves, 0, territory.territory_index)
+	sa.set(&gc.valid_moves, 0, int(territory.territory_index))
 	gc.clear_needed = true
 	//return
 }
@@ -144,18 +144,18 @@ build_sea_retreat_options :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 	   non_dest_non_sub_exist(gc, src_sea) {
 		// I am allowed to stay because I have combat units or no enemy blockade remains
 		// otherwise I am possibly wasting transports
-		sa.push(&gc.valid_moves, src_sea.territory_index)
+		sa.push(&gc.valid_moves, int(src_sea.territory_index))
 	}
 	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
 		// todo only allow retreat to valid territories where attack originated
 		if dst_sea.enemy_blockade_total == 0 && dst_sea.combat_status == .NO_COMBAT {
-			sa.push(&gc.valid_moves, dst_sea.territory_index)
+			sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 		}
 	}
 }
 
-sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: int) {
-	dst_sea := &gc.seas[dst_air_idx - len(gc.lands)]
+sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: Air_ID) -> bool {
+	dst_sea := get_sea(gc, dst_air_idx) or_return
 	player_idx := gc.cur_player.index
 	team_idx := gc.cur_player.team.index
 	for active_ship in Retreatable_Ships {
@@ -168,6 +168,7 @@ sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: int) {
 		src_sea.team_units[team_idx] -= number_of_ships
 	}
 	src_sea.combat_status = .NO_COMBAT
+	return true
 }
 
 do_sea_targets_exist :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
@@ -347,7 +348,7 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }
 
-check_for_enemy :: proc(dst_air: ^Territory, enemy_team_idx: int) -> bool {
+check_for_enemy :: proc(dst_air: ^Territory, enemy_team_idx: Team_ID) -> bool {
 	if dst_air.team_units[enemy_team_idx] == 0 do return false
 	dst_air.combat_status = .PRE_COMBAT
 	return true
