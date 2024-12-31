@@ -208,7 +208,7 @@ check_load_transport :: proc(
 ) -> (
 	ok: bool,
 ) {
-	dst_sea := get_sea(gc, dst_air_idx) or_return
+	dst_sea := get_sea(gc, dst_air_idx)
 	load_available_transport(army, src_land, dst_sea, gc.cur_player.index)
 	sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
 	add_valid_army_moves(gc, src_land, army) //reset valid moves since transport cargo has changed

@@ -37,7 +37,7 @@ Sea_State :: struct {
 }
 
 Combat_Status :: enum {
-	NO_COMBAT  = 0,
-	MID_COMBAT = 1,
-	PRE_COMBAT = 2,
+	NO_COMBAT,
+	MID_COMBAT,
+	PRE_COMBAT,
 }

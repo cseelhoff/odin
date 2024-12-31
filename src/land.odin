@@ -56,10 +56,7 @@ Land_ID :: enum {
 
 get_land :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> (land: ^Land, ok: bool) {
 	land_idx := int(air_idx)
-	if land_idx >= len(LANDS_DATA) {
-		fmt.eprintln("Error: Land not found: %d\n", land_idx)
-		return &gc.lands[0], false
-	}
+	assert(land_idx < len(LANDS_DATA), "Invalid land index")
 	return &gc.lands[land_idx], true
 }
 
@@ -170,7 +167,7 @@ conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
 	team := gc.cur_player.team
 	enemy_team_idx := gc.cur_player.team.enemy_team.index
 	old_owner := dst_land.owner
-	if old_owner.captial.territory_index == dst_land.territory_index {
+	if old_owner.captial == dst_land {
 		gc.cur_player.money += old_owner.money
 		old_owner.money = 0
 	}
@@ -186,10 +183,7 @@ conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
 	}
 	sa.push(&new_owner.factory_locations, dst_land)
 	index, found := slice.linear_search(sa.slice(&old_owner.factory_locations), dst_land)
-	if !found {
-		fmt.eprint("factory conquered, but not found in owned factory locations")
-		return false
-	}
+	assert(found, "factory conquered, but not found in owned factory locations")
 	sa.unordered_remove(&old_owner.factory_locations, index)
 	return true
 }

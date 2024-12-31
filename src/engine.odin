@@ -16,7 +16,7 @@ when ODIN_DEBUG {
 play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	move_unmoved_planes(gc) or_return // move before carriers for more options
 	move_combat_ships(gc) or_return
-	stage_transport_units(gc) or_return
+	stage_transports(gc) or_return
 	move_armies(gc) or_return
 	move_transports(gc) or_return
 	resolve_sea_battles(gc) or_return
@@ -155,7 +155,7 @@ build_sea_retreat_options :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 }
 
 sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: Air_ID) -> bool {
-	dst_sea := get_sea(gc, dst_air_idx) or_return
+	dst_sea := get_sea(gc, dst_air_idx)
 	player_idx := gc.cur_player.index
 	team_idx := gc.cur_player.team.index
 	for active_ship in Retreatable_Ships {
@@ -293,7 +293,7 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		if no_defender_threat_exists(gc, &src_sea) {
 			destroy_defender_transports(gc, &src_sea)
 			src_sea.combat_status = .NO_COMBAT
-			break
+			continue
 		}
 		disable_bombardment(gc, &src_sea)
 		sa.resize(&gc.valid_moves, 0)

@@ -94,35 +94,45 @@ Active_Ship_Space := [?][]Active_Ship {
 	Army_Sizes.SMALL = {Active_Ship.TRANS_1T_2_MOVES, Active_Ship.TRANS_1A_2_MOVES, Active_Ship.TRANS_1T_1_MOVES, Active_Ship.TRANS_1A_1_MOVES, Active_Ship.TRANS_1T_0_MOVES, Active_Ship.TRANS_1A_0_MOVES},
 }
 
-stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
+stage_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Transports_Needing_Staging {
-		ship_after := Ship_After_Staged[ship]
-		gc.clear_needed = false
-		for &src_sea in gc.seas {
-			if src_sea.active_ships[ship] == 0 do continue
-			reset_valid_moves(gc, &src_sea)
-			add_valid_transport_moves(gc, &src_sea, 2)
-			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				dst_sea_idx := get_sea_id(dst_air_idx) or_return
-				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
-				dst_sea := &gc.seas[dst_sea_idx]
-				if dst_sea.combat_status == .PRE_COMBAT {
-					// only allow staging to sea with enemy blockade if other unit started combat
-					sea_distance = 2
-				}
-				ship_after_staged := ship_after[sea_distance]
-				if sea_distance == 0 {
-					src_sea.active_ships[ship_after_staged] += src_sea.active_ships[ship]
-					src_sea.active_ships[ship] = 0
-					break
-				}
-				move_ship(dst_sea, ship_after_staged, gc.cur_player, ship, &src_sea)
-			}
-		}
-		if gc.clear_needed do clear_move_history(gc)
+		stage_trans_seas(gc, ship) or_return
 	}
+	return true
+}
+
+stage_trans_seas :: proc(gc: ^Game_Cache, ship: Active_Ship) -> (ok: bool) {
+	gc.clear_needed = false
+	for &src_sea in gc.seas {
+		stage_trans_sea(gc, &src_sea, ship) or_return
+	}
+	if gc.clear_needed do clear_move_history(gc)
+	return true
+}
+
+stage_trans_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	if src_sea.active_ships[ship] == 0 do return true
+	reset_valid_moves(gc, src_sea)
+	add_valid_transport_moves(gc, src_sea, 2)
+	for src_sea.active_ships[ship] > 0 {
+		stage_next_ship_in_sea(gc, src_sea, ship) or_return
+	}
+	return true
+}
+
+stage_next_ship_in_sea::proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+	dst_sea_idx := get_sea_id(dst_air_idx)
+	sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
+	dst_sea := &gc.seas[dst_sea_idx]
+	skip_ship(src_sea, dst_sea, ship) or_return
+	if dst_sea.combat_status == .PRE_COMBAT {
+		// only allow staging to sea with enemy blockade if other unit started combat
+		sea_distance = 2
+	}
+	ship_after_staged := Ship_After_Staged[ship][sea_distance]	
+	move_single_ship(dst_sea, ship_after_staged, gc.cur_player, ship, src_sea)
 	return true
 }
 
@@ -137,28 +147,38 @@ skip_empty_transports :: proc(gc: ^Game_Cache) {
 }
 
 move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	debug_checks(gc)
 	skip_empty_transports(gc)
 	for ship in Transports_With_Moves {
-		gc.clear_needed = false
-		for &src_sea in gc.seas {
-			if src_sea.active_ships[ship] == 0 do continue
-			reset_valid_moves(gc, &src_sea)
-			add_valid_transport_moves(gc, &src_sea, Ships_Moves[ship])
-			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				dst_sea_idx := get_sea_id(dst_air_idx) or_return
-				dst_sea := &gc.seas[dst_sea_idx]
-				if &src_sea == dst_sea {
-					src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
-					src_sea.active_ships[ship] = 0
-					break
-				}
-				move_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)
-			}
-		}
-		if gc.clear_needed do clear_move_history(gc)
+		move_trans_seas(gc, ship) or_return
 	}
+	return true
+}
+
+move_trans_seas :: proc(gc: ^Game_Cache, ship: Active_Ship) -> (ok: bool) {
+	debug_checks(gc)
+	gc.clear_needed = false
+	for &src_sea in gc.seas {
+		move_trans_sea(gc, &src_sea, ship) or_return
+	}
+	if gc.clear_needed do clear_move_history(gc)
+	return true
+}
+
+move_trans_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	if src_sea.active_ships[ship] == 0 do return true
+	reset_valid_moves(gc, src_sea)
+	add_valid_transport_moves(gc, src_sea, Ships_Moves[ship])
+	for src_sea.active_ships[ship] > 0 {
+		move_next_trans_in_sea(gc, src_sea, ship) or_return
+	}
+	return true
+}
+
+move_next_trans_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
+	dst_sea := get_sea(gc, dst_air_idx)
+	if skip_ship(src_sea, dst_sea, ship) do return true
+	move_single_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)
 	return true
 }
 
@@ -166,7 +186,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
 		if src_sea.skipped_moves[dst_sea.territory_index] ||
 		   dst_sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
-			   dst_sea.combat_status != .PRE_COMBAT {
+			   dst_sea.combat_status != .PRE_COMBAT { 	// transport needs escort
 			continue
 		}
 		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
@@ -175,7 +195,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
 		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] ||
 			   dst_sea_2_away.sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
-				   dst_sea_2_away.sea.combat_status != .PRE_COMBAT) {
+				   dst_sea_2_away.sea.combat_status != .PRE_COMBAT) { 	// transport needs escort
 			continue
 		}
 		for mid_sea in sa.slice(&dst_sea_2_away.mid_seas) {
@@ -187,6 +207,28 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	}
 }
 
+Transports_With_Cargo := [?]Active_Ship {
+	.TRANS_1I_0_MOVES,
+	.TRANS_1A_0_MOVES,
+	.TRANS_1T_0_MOVES,
+	.TRANS_2I_0_MOVES,
+	.TRANS_1I_1A_0_MOVES,
+	.TRANS_1I_1T_0_MOVES,
+}
+
 unload_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
+	for ship in Transports_With_Cargo {
+		for src_sea in gc.seas {
+			if src_sea.active_ships[ship] == 0 do continue
+			reset_valid_moves(gc, src_sea)
+			add_valid_unload_moves(gc, src_sea)
+			for src_sea.active_ships[ship] > 0 {
+				dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
+				dst_land := get_land(gc, dst_air_idx)
+				skip_ship(src_sea, dst_sea, ship) or_return
+				unload_unit_to_land(gc, dst_sea, ship)
+			}
+		}
+	}
+	return true
 }

@@ -133,11 +133,21 @@ Unmoved_Blockade_Ships := [?]Active_Ship {
 }
 
 Ships_Moved := [?]Active_Ship {
+	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_2_MOVES,
+	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I_2_MOVES,
+	Active_Ship.TRANS_1I_2_MOVES    = .TRANS_1I_0_MOVES,
 	Active_Ship.TRANS_1I_1_MOVES    = .TRANS_1I_0_MOVES,
+	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A_2_MOVES,
+	Active_Ship.TRANS_1A_2_MOVES    = .TRANS_1A_0_MOVES,
 	Active_Ship.TRANS_1A_1_MOVES    = .TRANS_1A_0_MOVES,
+	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T_2_MOVES,
+	Active_Ship.TRANS_1T_2_MOVES    = .TRANS_1T_0_MOVES,
 	Active_Ship.TRANS_1T_1_MOVES    = .TRANS_1T_0_MOVES,
+	Active_Ship.TRANS_2I_2_MOVES    = .TRANS_2I_0_MOVES,
 	Active_Ship.TRANS_2I_1_MOVES    = .TRANS_2I_0_MOVES,
+	Active_Ship.TRANS_1I_1A_2_MOVES = .TRANS_1I_1A_0_MOVES,
 	Active_Ship.TRANS_1I_1A_1_MOVES = .TRANS_1I_1A_0_MOVES,
+	Active_Ship.TRANS_1I_1T_2_MOVES = .TRANS_1I_1T_0_MOVES,
 	Active_Ship.TRANS_1I_1T_1_MOVES = .TRANS_1I_1T_0_MOVES,
 	Active_Ship.SUB_UNMOVED         = .SUB_0_MOVES,
 	Active_Ship.DESTROYER_UNMOVED   = .DESTROYER_0_MOVES,
@@ -219,12 +229,12 @@ move_ship_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok:
 	return true
 }
 
-move_next_ship_in_sea::proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+move_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
 	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
 	check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
-	dst_sea := get_sea(gc, dst_air_idx) or_return
+	dst_sea := get_sea(gc, dst_air_idx)
 	if skip_ship(src_sea, dst_sea, ship) do return true
-	move_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)
+	move_single_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)
 	if ship == Active_Ship.CARRIER_0_MOVES do carry_allied_fighters(gc, src_sea, dst_sea)
 	return true
 }
@@ -238,25 +248,25 @@ skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> (ok: bool)
 
 add_valid_ship_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) {
 	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
-		if (src_sea.skipped_moves[dst_sea.territory_index]) {
+		if src_sea.skipped_moves[dst_sea.territory_index] {
 			continue
 		}
 		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 	}
 	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
-		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index]) {
+		if src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] {
 			continue
 		}
 		for mid_sea in sa.slice(&dst_sea_2_away.mid_seas) {
 			if mid_sea.enemy_destroyer_total > 0 do continue
 			if ship != Active_Ship.SUB_UNMOVED && mid_sea.sea_path_blocked do continue
 			sa.push(&gc.valid_moves, int(dst_sea_2_away.sea.territory_index))
-			break			
+			break
 		}
 	}
 }
 
-move_ship :: proc(
+move_single_ship :: proc(
 	dst_sea: ^Sea,
 	dst_unit: Active_Ship,
 	player: ^Player,

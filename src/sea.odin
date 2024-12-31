@@ -57,21 +57,14 @@ SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
 CANALS :: [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
 
-get_sea_id :: proc(air_idx: Air_ID) -> (sea_idx: Sea_ID, ok: bool) {
-	if int(air_idx) <= len(LANDS_DATA) {
-		fmt.eprintln("Error: Sea not found for Air_ID: %d\n", air_idx)
-		return Sea_ID(int(air_idx)), false
-	}
-	return Sea_ID(int(air_idx) - len(LANDS_DATA)), true
+get_sea_id :: proc(air_idx: Air_ID) -> Sea_ID {
+	assert(int(air_idx) > len(LANDS_DATA), "Invalid air index")
+	return Sea_ID(int(air_idx) - len(LANDS_DATA))
 }
 
-get_sea::proc(gc: ^Game_Cache, air_idx: Air_ID) -> (sea: ^Sea, ok: bool) {
-	if int(air_idx) <= len(LANDS_DATA) {
-		fmt.eprintln("Error: Sea not found for Air_ID: %d\n", air_idx)
-		return &gc.seas[0], false
-	}
-	sea_idx := int(air_idx) - len(LANDS_DATA)
-	return &gc.seas[sea_idx], true
+get_sea::proc(gc: ^Game_Cache, air_idx: Air_ID) -> ^Sea {
+	assert(int(air_idx) > len(LANDS_DATA), "Invalid air index")
+	return &gc.seas[int(air_idx) - len(LANDS_DATA)]
 }
 
 get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
