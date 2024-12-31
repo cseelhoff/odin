@@ -97,7 +97,7 @@ add_valid_bomber_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
 add_meaningful_bomber_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	terr_idx := dst_air.territory_index
 	if dst_air.can_bomber_land_here ||
-	   dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] != 0 ||
+	   dst_air.team_units[gc.cur_player.team.enemy_team.index] != 0 ||
 	   terr_idx < len(LANDS_DATA) &&
 		   gc.lands[terr_idx].factory_damage < gc.lands[terr_idx].factory_max_damage * 2 {
 		add_move_if_not_skipped(gc, src_air, dst_air)

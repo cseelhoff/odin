@@ -2,41 +2,7 @@ package oaaa
 
 import sa "core:container/small_array"
 
-CARRIER_UNMOVED_NAME :: "CARRIER_UNMOVED"
 CARRIER_MAX_FIGHTERS :: 2
-
-move_carriers::proc(gc: ^Game_Cache) -> (ok: bool) {
-  debug_checks(gc)
-	gc.clear_needed = false
-	for &src_sea in gc.seas {
-		if src_sea.active_ships[Active_Ship.CARRIER_UNMOVED] == 0 do continue
-		dst_air_idx := reset_valid_moves(gc, &src_sea)
-		add_valid_ship_moves(gc, &src_sea)
-		for src_sea.active_ships[Active_Ship.CARRIER_UNMOVED] > 0 {
-			dst_air_idx = get_move_input(gc, CARRIER_UNMOVED_NAME, &src_sea) or_return
-			dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
-			if dst_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 {
-				dst_sea.combat_status = .PRE_COMBAT
-			}
-			if &src_sea == dst_sea {
-				src_sea.active_ships[Active_Ship.CARRIER_0_MOVES] +=
-					src_sea.active_ships[Active_Ship.CARRIER_UNMOVED]
-				src_sea.active_ships[Active_Ship.CARRIER_UNMOVED] = 0
-				break
-			}
-			move_ship(
-				dst_sea,
-				Active_Ship.CARRIER_0_MOVES,
-				gc.cur_player,
-				Active_Ship.CARRIER_UNMOVED,
-				&src_sea,
-			)
-      carry_allied_fighters(gc, &src_sea, dst_sea)
-		}
-	}
-	if gc.clear_needed do clear_move_history(gc)
-	return true
-}
 
 carry_allied_fighters::proc(gc: ^Game_Cache, src_sea: ^Sea, dst_sea: ^Sea) {
   fighters_remaining := CARRIER_MAX_FIGHTERS

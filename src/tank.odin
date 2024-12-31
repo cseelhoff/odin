@@ -22,7 +22,7 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			}
 			dst_land := gc.lands[dst_air_idx]
 			landDistance := src_land.land_distances[dst_air_idx]
-			if (dst_land.teams_unit_count[enemy_team_idx] > 0) { 	//combat ends turn
+			if (dst_land.team_units[enemy_team_idx] > 0) { 	//combat ends turn
 				dst_land.combat_status = Combat_Status.PRE_COMBAT
 				landDistance = 2
 			} else if (team.is_allied[dst_land.owner.index]) { 	//simple relocate ends turn
@@ -40,9 +40,9 @@ move_tanks_2 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				src_land.active_armies[Active_Army.TANK_UNMOVED] = 0
 				break
 			case 1:
-				move_army(&dst_land, .TANK_1_MOVES, gc.cur_player, .TANK_UNMOVED, &src_land)
+				move_single_army(&dst_land, .TANK_1_MOVES, gc.cur_player, .TANK_UNMOVED, &src_land)
 			case 2:
-				move_army(&dst_land, .TANK_0_MOVES, gc.cur_player, .TANK_UNMOVED, &src_land)
+				move_single_army(&dst_land, .TANK_0_MOVES, gc.cur_player, .TANK_UNMOVED, &src_land)
 			}
 		}
 	}
@@ -68,7 +68,7 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			}
 			dst_land := &gc.lands[dst_air_idx]
 			landDistance := src_land.land_distances[dst_air_idx]
-			if dst_land.teams_unit_count[enemy_team_idx] > 0 { 	//combat ends turn
+			if dst_land.team_units[enemy_team_idx] > 0 { 	//combat ends turn
 				dst_land.combat_status = Combat_Status.PRE_COMBAT
 			} else if (!team.is_allied[dst_land.owner.index]) { 	//simple relocate ends turn
 				conquer_land(gc, dst_land)
@@ -79,7 +79,7 @@ move_tanks_1 :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				src_land.active_armies[Active_Army.TANK_1_MOVES] = 0
 				break
 			}
-			move_army(dst_land, .TANK_0_MOVES, gc.cur_player, .TANK_1_MOVES, &src_land)
+			move_single_army(dst_land, .TANK_0_MOVES, gc.cur_player, .TANK_1_MOVES, &src_land)
 		}
 	}
 	if gc.clear_needed do clear_move_history(gc)
@@ -101,7 +101,7 @@ add_valid_tank_2_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 		}
 		if (src_land.skipped_moves[dst_sea_2_away.sea.territory_index]) do continue
 		for mid_land in sa.slice(&dst_sea_2_away.mid_lands) {
-			if mid_land.teams_unit_count[enemy_team_idx] == 0 {
+			if mid_land.team_units[enemy_team_idx] == 0 {
 				sa.push(&gc.valid_moves, dst_sea_2_away.sea.territory_index)
 				break
 			}

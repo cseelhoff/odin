@@ -103,16 +103,10 @@ Transport_Can_Load_Large := [?]Active_Ship {
 Transport_Can_Load_Small := [?]Active_Ship {
 	Active_Ship.TRANS_1T_2_MOVES,
 	Active_Ship.TRANS_1A_2_MOVES,
-	Active_Ship.TRANS_1I_2_MOVES,
-	Active_Ship.TRANS_EMPTY_2_MOVES,
 	Active_Ship.TRANS_1T_1_MOVES,
 	Active_Ship.TRANS_1A_1_MOVES,
-	Active_Ship.TRANS_1I_1_MOVES,
-	Active_Ship.TRANS_EMPTY_1_MOVES,
 	Active_Ship.TRANS_1T_0_MOVES,
 	Active_Ship.TRANS_1A_0_MOVES,
-	Active_Ship.TRANS_1I_0_MOVES,
-	Active_Ship.TRANS_EMPTY_0_MOVES,
 }
 
 stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
@@ -145,55 +139,6 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		if gc.clear_needed do clear_move_history(gc)
 	}
 	return true
-}
-
-load_unit :: proc(
-	src_land: ^Land,
-	dst_sea: ^Sea,
-	active_transport: Active_Ship,
-	player_idx: int,
-	active_army: Active_Army,
-) {
-	idle_army := Active_Army_To_Idle[active_army]
-	new_active_transport := Transport_Load_Unit[idle_army][active_transport]
-	dst_sea.active_ships[new_active_transport] += 1
-	dst_sea.idle_ships[player_idx][Active_Ship_To_Idle[new_active_transport]] += 1
-	src_land.active_armies[active_army] -= 1
-	src_land.idle_armies[player_idx][idle_army] -= 1
-}
-
-load_large_transport :: proc(
-	gc: ^Game_Cache,
-	active_army: Active_Army,
-	src_land: ^Land,
-	dst_air_idx: int,
-) {
-	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
-	for transport in Transport_Can_Load_Large {
-		if dst_sea.active_ships[transport] > 0 {
-			load_unit(src_land, dst_sea, transport, gc.cur_player.index, active_army)
-			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
-			return
-		}
-	}
-	fmt.eprintln("Error: No large transport available to load\n")
-}
-
-load_small_transport :: proc(
-	gc: ^Game_Cache,
-	active_army: Active_Army,
-	src_land: ^Land,
-	dst_air_idx: int,
-) {
-	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
-	for transport in Transport_Can_Load_Small {
-		if dst_sea.active_ships[transport] > 0 {
-			load_unit(src_land, dst_sea, transport, gc.cur_player.index, active_army)
-			sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
-			return
-		}
-	}
-	fmt.eprintln("Error: No large transport available to load\n")
 }
 
 skip_empty_transports :: proc(gc: ^Game_Cache) {
@@ -235,7 +180,7 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
 	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
 		if src_sea.skipped_moves[dst_sea.territory_index] ||
-		   dst_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 &&
+		   dst_sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
 			   dst_sea.combat_status != .PRE_COMBAT {
 			continue
 		}
@@ -244,7 +189,7 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	if max_distance == 1 do return
 	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
 		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] ||
-			   dst_sea_2_away.sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 &&
+			   dst_sea_2_away.sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
 				   dst_sea_2_away.sea.combat_status != .PRE_COMBAT) {
 			continue
 		}

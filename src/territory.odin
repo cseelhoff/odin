@@ -13,7 +13,7 @@ Territory :: struct {
 	idle_planes:                [PLAYERS_COUNT]Idle_Plane_For_Player,
 	active_planes:              [len(Active_Plane)]int,
 	air_distances:              [TERRITORIES_COUNT]int,
-	skipped_moves:              [TERRITORIES_COUNT]bool,
+	skipped_moves:              [TERRITORIES_COUNT]bool, // Maybe this should be a bitset at the gc level
 	combat_status:              Combat_Status,
 	builds_left:                int,
 	land_within_6_moves:        SA_Land_Pointers,
@@ -28,10 +28,10 @@ Territory :: struct {
 	airs_4_moves_away:          SA_Territory_Pointers,
 	airs_5_moves_away:          SA_Territory_Pointers,
 	airs_6_moves_away:          SA_Territory_Pointers,
-	teams_unit_count:           [TEAMS_COUNT]int,
+	team_units:                 [TEAMS_COUNT]int,
 	territory_index:            int,
 	enemy_fighters_total:       int,
-	can_fighter_land_here:      bool,
+	can_fighter_land_here:      bool, //bitset?
 	can_fighter_land_in_1_move: bool,
 	can_bomber_land_here:       bool,
 	can_bomber_land_in_1_move:  bool,

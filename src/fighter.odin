@@ -26,7 +26,7 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			dst_air_idx = get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			air_distance := src_air.air_distances[dst_air_idx]
-			if (dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0) {
+			if (dst_air.team_units[gc.cur_player.team.enemy_team.index] > 0) {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
 				air_distance = FIGHTER_MAX_MOVES
@@ -108,7 +108,7 @@ add_valid_fighter_moves :: proc(gc: ^Game_Cache, src_air: ^Territory) {
 
 add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
 	if dst_air.can_fighter_land_here ||
-	   dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] != 0 {
+	   dst_air.team_units[gc.cur_player.team.enemy_team.index] != 0 {
 		add_move_if_not_skipped(gc, src_air, dst_air)
 	}
 }
