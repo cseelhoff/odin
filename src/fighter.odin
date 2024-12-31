@@ -20,10 +20,10 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for &src_air in gc.territories {
 		if src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
 		if !gc.is_fighter_cache_current do refresh_can_fighters_land_here(gc)
-		dst_air_idx := reset_valid_moves(gc, src_air)
+		reset_valid_moves(gc, src_air)
 		add_valid_fighter_moves(gc, src_air)
 		for src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
-			dst_air_idx = get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
+			dst_air_idx := get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			air_distance := src_air.air_distances[dst_air_idx]
 			if (dst_air.team_units[gc.cur_player.team.enemy_team.index] > 0) {

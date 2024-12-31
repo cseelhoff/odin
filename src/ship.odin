@@ -198,17 +198,17 @@ skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> (ok: bool)
 	return false
 }
 
-move_blockade_ships :: proc(gc: ^Game_Cache) -> (ok: bool) {
+move_combat_ships :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Unmoved_Blockade_Ships {
 		gc.clear_needed = false
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
-			dst_air_idx := reset_valid_moves(gc, &src_sea)
+			reset_valid_moves(gc, &src_sea)
 			add_valid_ship_moves(gc, &src_sea, ship)
 			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				check_for_enemy(gc, dst_air_idx)
+				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+				check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
 				dst_sea := gc.seas[dst_air_idx - len(LANDS_DATA)]
 				skip_ship(&src_sea, &dst_sea, ship) or_break
 				move_ship(&dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)

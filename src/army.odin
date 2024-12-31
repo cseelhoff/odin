@@ -27,8 +27,8 @@ Army_Names := [?]string {
 	Active_Army.INF_0_MOVES   = "INF_0_MOVES",
 	Active_Army.ARTY_UNMOVED  = "ARTY_UNMOVED",
 	Active_Army.ARTY_0_MOVES  = "ARTY_0_MOVES",
-	Active_Army.TANK_UNMOVED  = TANK_UNMOVED_NAME,
-	Active_Army.TANK_1_MOVES  = TANK_1_MOVES_NAME,
+	Active_Army.TANK_UNMOVED  = "TANK_UNMOVED",
+	Active_Army.TANK_1_MOVES  = "TANK_1_MOVES",
 	Active_Army.TANK_0_MOVES  = "TANK_0_MOVES",
 	Active_Army.AAGUN_UNMOVED = "AAGUN_UNMOVED",
 	Active_Army.AAGUN_0_MOVES = "AAGUN_0_MOVES",
@@ -65,8 +65,8 @@ Army_Size := [?]int {
 }
 
 move_armies :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	gc.clear_needed = false
 	for army in Unmoved_Armies {
+		gc.clear_needed = false
 		move_army_lands(gc, army) or_return
 		if gc.clear_needed do clear_move_history(gc)
 	}
@@ -108,7 +108,7 @@ blitz_checks :: proc(
 	army: Active_Army,
 	src_land: ^Land,
 ) -> Active_Army {
-	if !check_for_enemy(gc, dst_air_idx) &&
+	if !check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index) &&
 	   check_for_conquer(gc, dst_land) &&
 	   army == .TANK_UNMOVED &&
 	   src_land.land_distances[dst_air_idx] == 1 &&

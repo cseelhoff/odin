@@ -116,10 +116,10 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		gc.clear_needed = false
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
-			dst_air_idx := reset_valid_moves(gc, &src_sea)
+			reset_valid_moves(gc, &src_sea)
 			add_valid_transport_moves(gc, &src_sea, 2)
 			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
 				dst_sea_idx := dst_air_idx - len(LANDS_DATA)
 				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 				dst_sea := &gc.seas[dst_sea_idx]
@@ -158,10 +158,10 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		gc.clear_needed = false
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
-			dst_air_idx := reset_valid_moves(gc, &src_sea)
+			reset_valid_moves(gc, &src_sea)
 			add_valid_transport_moves(gc, &src_sea, Ships_Moves[ship])
 			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
 				dst_sea_idx := dst_air_idx - len(LANDS_DATA)
 				dst_sea := &gc.seas[dst_sea_idx]
 				if &src_sea == dst_sea {

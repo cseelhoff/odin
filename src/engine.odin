@@ -16,14 +16,9 @@ when ODIN_DEBUG {
 play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	move_unmoved_fighters(gc) or_return // move before carriers for more options
 	move_unmoved_bombers(gc) or_return
-	move_dest_crus_bs(gc) or_return
-	move_subs(gc) or_return
-	move_carriers(gc) or_return
+	move_combat_ships(gc) or_return
 	stage_transport_units(gc) or_return
-	move_tanks_2(gc) or_return
-	move_tanks_1(gc) or_return
-	move_artillery(gc) or_return
-	move_infantry(gc) or_return
+	move_armies(gc) or_return
 	move_transports(gc) or_return
 	resolve_sea_battles(gc) or_return
 	unload_transports(gc) or_return
@@ -353,9 +348,8 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }
 
-check_for_enemy :: proc(gc: ^Game_Cache, dst_air_idx: int) -> bool {
-	dst_air := gc.territories[dst_air_idx]
-	if dst_air.team_units[gc.cur_player.team.enemy_team.index] == 0 do return false
+check_for_enemy :: proc(dst_air: ^Territory, enemy_team_idx: int) -> bool {
+	if dst_air.team_units[enemy_team_idx] == 0 do return false
 	dst_air.combat_status = .PRE_COMBAT
 	return true
 }

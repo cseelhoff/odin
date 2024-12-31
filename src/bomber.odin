@@ -22,10 +22,10 @@ move_unmoved_bombers :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for &src_air in gc.territories {
 		if src_air.active_planes[Active_Plane.BOMBER_UNMOVED] == 0 do continue
 		if !gc.is_bomber_cache_current do refresh_can_bombers_land_here(gc)
-		dst_air_idx := reset_valid_moves(gc, src_air)
+		reset_valid_moves(gc, src_air)
 		add_valid_bomber_moves(gc, src_air)
 		for src_air.active_planes[Active_Plane.BOMBER_UNMOVED] > 0 {
-			dst_air_idx = get_move_input(gc, BOMBER_UNMOVED_NAME, src_air) or_return
+			dst_air_idx := get_move_input(gc, BOMBER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
 			air_dist := src_air.air_distances[dst_air_idx]
 			if !dst_air.can_bomber_land_here {
