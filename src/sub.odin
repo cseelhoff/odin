@@ -15,16 +15,9 @@ move_subs :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		add_valid_sub_moves(gc, &src_sea)
 		for src_sea.active_ships[Active_Ship.SUB_UNMOVED] > 0 {
 			dst_air_idx = get_move_input(gc, SUB_UNMOVED_NAME, &src_sea) or_return
+			check_for_enemy(gc, dst_air_idx)
 			dst_sea := gc.seas[dst_air_idx - len(LANDS_DATA)]
-			if dst_sea.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 {
-				dst_sea.combat_status = .PRE_COMBAT
-			}
-			if src_sea == dst_sea {
-				src_sea.active_ships[Active_Ship.SUB_0_MOVES] +=
-					src_sea.active_ships[Active_Ship.SUB_UNMOVED]
-				src_sea.active_ships[Active_Ship.SUB_UNMOVED] = 0
-				break
-			}
+			skip_ship(&src_sea, &dst_sea, Active_Ship.SUB_UNMOVED) or_break
 			move_ship(
 				&dst_sea,
 				Active_Ship.SUB_0_MOVES,

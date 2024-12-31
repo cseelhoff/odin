@@ -25,15 +25,15 @@ move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
 		for src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
 			dst_air_idx = get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
 			dst_air := gc.territories[dst_air_idx]
-			airDistance := src_air.air_distances[dst_air_idx]
+			air_distance := src_air.air_distances[dst_air_idx]
 			if (dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0) {
 				dst_air.combat_status = .PRE_COMBAT
 			} else {
-				airDistance = FIGHTER_MAX_MOVES
+				air_distance = FIGHTER_MAX_MOVES
 			}
 			move_plane(
 				dst_air,
-				Fighter_After_Moves[airDistance],
+				Fighter_After_Moves[air_distance],
 				gc.cur_player,
 				.FIGHTER_UNMOVED,
 				src_air,

@@ -351,6 +351,14 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	}
 	return false
 }
+
+check_for_enemy::proc(gc: ^Game_Cache, dst_air_idx: int) {
+	dst_air := gc.territories[dst_air_idx]
+	if dst_air.teams_unit_count[gc.cur_player.team.enemy_team.index] > 0 {
+		dst_air.combat_status = .PRE_COMBAT
+	}
+}
+
 resolve_land_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }

@@ -4,6 +4,8 @@ import "core:fmt"
 import "core:mem"
 import "core:slice"
 
+MAX_TRANSPORT_MOVES :: 2
+
 Transports_With_Moves := [?]Active_Ship {
 	.TRANS_1I_1_MOVES,
 	.TRANS_1A_1_MOVES,
@@ -26,25 +28,27 @@ Transports_Needing_Staging := [?]Active_Ship {
 	.TRANS_1T_UNMOVED,
 }
 
-Ship_Stage_0 := [?]Active_Ship {
-	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_2_MOVES,
-	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I_2_MOVES,
-	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A_2_MOVES,
-	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T_2_MOVES,
-}
-
-Ship_Stage_1 := [?]Active_Ship {
-	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_1_MOVES,
-	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I_1_MOVES,
-	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A_1_MOVES,
-	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T_1_MOVES,
-}
-
-Ship_Stage_2 := [?]Active_Ship {
-	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY_0_MOVES,
-	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I_0_MOVES,
-	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A_0_MOVES,
-	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T_0_MOVES,
+Ship_After_Staged := [?][MAX_TRANSPORT_MOVES + 1]Active_Ship {
+	Active_Ship.TRANS_EMPTY_UNMOVED = {
+		0 = .TRANS_EMPTY_2_MOVES,
+		1 = .TRANS_EMPTY_1_MOVES,
+		2 = .TRANS_EMPTY_0_MOVES,
+	},
+	Active_Ship.TRANS_1I_UNMOVED = {
+		0 = .TRANS_1I_2_MOVES,
+		1 = .TRANS_1I_1_MOVES,
+		2 = .TRANS_1I_0_MOVES,
+	},
+	Active_Ship.TRANS_1A_UNMOVED = {
+		0 = .TRANS_1A_2_MOVES,
+		1 = .TRANS_1A_1_MOVES,
+		2 = .TRANS_1A_0_MOVES,
+	},
+	Active_Ship.TRANS_1T_UNMOVED = {
+		0 = .TRANS_1T_2_MOVES,
+		1 = .TRANS_1T_1_MOVES,
+		2 = .TRANS_1T_0_MOVES,
+	},
 }
 
 // Ship_Large_Space := [?]bool {
@@ -114,8 +118,8 @@ Transport_Can_Load_Small := [?]Active_Ship {
 stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Transports_Needing_Staging {
+		ship_after := Ship_After_Staged[ship]
 		gc.clear_needed = false
-		defer if gc.clear_needed do clear_move_history(gc)
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
 			dst_air_idx := reset_valid_moves(gc, &src_sea)
@@ -124,28 +128,21 @@ stage_transport_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				dst_air_idx = get_move_input(gc, Ship_Names[ship], &src_sea) or_return
 				dst_sea_idx := dst_air_idx - len(LANDS_DATA)
 				sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
-				dst_sea := gc.seas[dst_sea_idx]
+				dst_sea := &gc.seas[dst_sea_idx]
 				if dst_sea.combat_status == .PRE_COMBAT {
 					// only allow staging to sea with enemy blockade if other unit started combat
 					sea_distance = 2
 				}
-				ship_after_move: Active_Ship
-				switch sea_distance {
-				case 0:
-					src_sea.active_ships[Ship_Stage_0[ship]] += src_sea.active_ships[ship]
+				ship_after_staged := ship_after[sea_distance]
+				if sea_distance == 0 {
+					src_sea.active_ships[ship_after_staged] += src_sea.active_ships[ship]
 					src_sea.active_ships[ship] = 0
 					break
-				case 1:
-					ship_after_move = Ship_Stage_1[ship]
-				case 2:
-					ship_after_move = Ship_Stage_2[ship]
-				case:
-					fmt.eprintln("Error: Invalid sea_distance: %d\n", sea_distance)
-					return false
 				}
-				move_ship(&dst_sea, ship_after_move, gc.cur_player, ship, &src_sea)
+				move_ship(dst_sea, ship_after_staged, gc.cur_player, ship, &src_sea)
 			}
 		}
+		if gc.clear_needed do clear_move_history(gc)
 	}
 	return true
 }
@@ -214,7 +211,6 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	skip_empty_transports(gc)
 	for ship in Transports_With_Moves {
 		gc.clear_needed = false
-		defer if gc.clear_needed do clear_move_history(gc)
 		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
 			dst_air_idx := reset_valid_moves(gc, &src_sea)
@@ -231,6 +227,7 @@ move_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				move_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)
 			}
 		}
+		if gc.clear_needed do clear_move_history(gc)
 	}
 	return true
 }
