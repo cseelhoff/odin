@@ -11,37 +11,19 @@ Fighter_After_Moves := [?]Active_Plane {
 	.FIGHTER_0_MOVES,
 }
 
-FIGHTER_UNMOVED_NAME :: "FIGHTER_UNMOVED"
 FIGHTER_MAX_MOVES :: 4
 
-move_unmoved_fighters :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	debug_checks(gc)
-	gc.clear_needed = false
-	for &src_air in gc.territories {
-		if src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] == 0 do continue
-		if !gc.is_fighter_cache_current do refresh_can_fighters_land_here(gc)
-		reset_valid_moves(gc, src_air)
-		add_valid_fighter_moves(gc, src_air)
-		for src_air.active_planes[Active_Plane.FIGHTER_UNMOVED] > 0 {
-			dst_air_idx := get_move_input(gc, FIGHTER_UNMOVED_NAME, src_air) or_return
-			dst_air := gc.territories[dst_air_idx]
-			air_distance := src_air.air_distances[dst_air_idx]
-			if (dst_air.team_units[gc.cur_player.team.enemy_team.index] > 0) {
-				dst_air.combat_status = .PRE_COMBAT
-			} else {
-				air_distance = FIGHTER_MAX_MOVES
-			}
-			move_plane(
-				dst_air,
-				Fighter_After_Moves[air_distance],
-				gc.cur_player,
-				.FIGHTER_UNMOVED,
-				src_air,
-			)
-		}
+Unmoved_Planes := [?]Active_Plane{Active_Plane.FIGHTER_UNMOVED, Active_Plane.BOMBER_UNMOVED}
+
+fighter_enemy_checks :: proc(
+	gc: ^Game_Cache,
+	src_air: ^Territory,
+	dst_air: ^Territory,
+) -> Active_Plane {
+	if check_for_enemy(dst_air, gc.cur_player.team.enemy_team.index) {
+		return Fighter_After_Moves[src_air.air_distances[dst_air.territory_index]]
 	}
-	if gc.clear_needed do clear_move_history(gc)
-	return true
+	return .FIGHTER_0_MOVES
 }
 
 fighter_can_land_here :: proc(territory: ^Territory) {
@@ -52,6 +34,7 @@ fighter_can_land_here :: proc(territory: ^Territory) {
 }
 
 refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
+	if gc.is_fighter_cache_current do return
 	// initialize all to false
 	for territory in gc.territories {
 		territory.can_fighter_land_here = false
@@ -59,8 +42,7 @@ refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
 	}
 	for &land in gc.lands {
 		// is allied owned and not recently conquered?
-		if gc.cur_player.team == land.owner.team &&
-		   land.combat_status == Combat_Status.NO_COMBAT {
+		if gc.cur_player.team == land.owner.team && land.combat_status == Combat_Status.NO_COMBAT {
 			fighter_can_land_here(&land.territory)
 		}
 		// check for possiblity to build carrier under fighter
@@ -113,6 +95,6 @@ add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_ai
 	}
 }
 
-land_fighter_units::proc(gc: ^Game_Cache) -> (ok: bool) {
+land_fighter_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }

@@ -14,8 +14,7 @@ when ODIN_DEBUG {
 	}
 }
 play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	move_unmoved_fighters(gc) or_return // move before carriers for more options
-	move_unmoved_bombers(gc) or_return
+	move_unmoved_planes(gc) or_return // move before carriers for more options
 	move_combat_ships(gc) or_return
 	stage_transport_units(gc) or_return
 	move_armies(gc) or_return

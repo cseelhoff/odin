@@ -191,34 +191,48 @@ Ships_After_Retreat := [?]Active_Ship {
 	Active_Ship.BS_DAMAGED_BOMBARDED = .BS_DAMAGED_BOMBARDED,
 }
 
-skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
-	if src_sea != dst_sea do return true
-	src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
-	src_sea.active_ships[ship] = 0
-	return false
-}
-
 move_combat_ships :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	debug_checks(gc)
 	for ship in Unmoved_Blockade_Ships {
-		gc.clear_needed = false
-		for &src_sea in gc.seas {
-			if src_sea.active_ships[ship] == 0 do continue
-			reset_valid_moves(gc, &src_sea)
-			add_valid_ship_moves(gc, &src_sea, ship)
-			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
-				check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
-				dst_sea := gc.seas[dst_air_idx - len(LANDS_DATA)]
-				skip_ship(&src_sea, &dst_sea, ship) or_break
-				move_ship(&dst_sea, Ships_Moved[ship], gc.cur_player, ship, &src_sea)
-				if ship == Active_Ship.CARRIER_0_MOVES {
-					carry_allied_fighters(gc, &src_sea, &dst_sea)
-				}
-			}
-			if gc.clear_needed do clear_move_history(gc)
-		}
+		move_ship_seas(gc, ship) or_return
 	}
+	return true
+}
+
+move_ship_seas :: proc(gc: ^Game_Cache, ship: Active_Ship) -> (ok: bool) {
+	debug_checks(gc)
+	gc.clear_needed = false
+	for &src_sea in gc.seas {
+		move_ship_sea(gc, &src_sea, ship) or_return
+	}
+	if gc.clear_needed do clear_move_history(gc)
+	return true
+}
+
+move_ship_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	if src_sea.active_ships[ship] == 0 do return true
+	reset_valid_moves(gc, src_sea)
+	add_valid_ship_moves(gc, src_sea, ship)
+	for src_sea.active_ships[ship] > 0 {
+		move_next_ship_in_sea(gc, src_sea, ship) or_return
+	}
+	return true
+}
+
+move_next_ship_in_sea::proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
+	check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
+	dst_sea := &gc.seas[dst_air_idx - len(LANDS_DATA)]
+	if skip_ship(src_sea, dst_sea, ship) do return true
+	move_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)
+	if ship == Active_Ship.CARRIER_0_MOVES do carry_allied_fighters(gc, src_sea, dst_sea)
+	return true
+}
+
+skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	if src_sea != dst_sea do return false
+	src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
+	src_sea.active_ships[ship] = 0
 	return true
 }
 

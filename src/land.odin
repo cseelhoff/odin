@@ -17,6 +17,8 @@ Land_Data :: struct {
 	value: int,
 }
 
+Mid_Lands :: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land)
+
 Land :: struct {
 	using territory:    Territory,
 	idle_armies:        [PLAYERS_COUNT]Idle_Army_For_Player,
@@ -36,12 +38,12 @@ Land :: struct {
 
 Land_2_Moves_Away :: struct {
 	land:      ^Land,
-	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
+	mid_lands: Mid_Lands,
 }
 
 L2S_2_Moves_Away :: struct {
 	sea:       ^Sea,
-	mid_lands: sa.Small_Array(MAX_PATHS_TO_LAND, ^Land),
+	mid_lands: Mid_Lands,
 }
 
 //  PACIFIC | USA | ATLANTIC | ENG | BALTIC | GER | RUS | JAP | PAC
