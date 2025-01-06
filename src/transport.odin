@@ -121,17 +121,17 @@ stage_trans_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (o
 	return true
 }
 
-stage_next_ship_in_sea::proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
-	dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+stage_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
 	dst_sea_idx := get_sea_id(dst_air_idx)
 	sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
 	dst_sea := &gc.seas[dst_sea_idx]
-	skip_ship(src_sea, dst_sea, ship) or_return
+	if skip_ship(src_sea, dst_sea, ship) do return true
 	if dst_sea.combat_status == .PRE_COMBAT {
 		// only allow staging to sea with enemy blockade if other unit started combat
 		sea_distance = 2
 	}
-	ship_after_staged := Ship_After_Staged[ship][sea_distance]	
+	ship_after_staged := Ship_After_Staged[ship][sea_distance]
 	move_single_ship(dst_sea, ship_after_staged, gc.cur_player, ship, src_sea)
 	return true
 }
@@ -207,6 +207,12 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 	}
 }
 
+add_valid_unload_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
+	for dst_land in sa.slice(&src_sea.adjacent_lands) {
+		sa.push(&gc.valid_moves, int(dst_land.territory_index))
+	}
+}
+
 Transports_With_Cargo := [?]Active_Ship {
 	.TRANS_1I_0_MOVES,
 	.TRANS_1A_0_MOVES,
@@ -216,19 +222,65 @@ Transports_With_Cargo := [?]Active_Ship {
 	.TRANS_1I_1T_0_MOVES,
 }
 
+Skipped_Transports := [?]Active_Ship {
+	Active_Ship.TRANS_1I_0_MOVES    = .TRANS_1I_UNLOADED,
+	Active_Ship.TRANS_1A_0_MOVES    = .TRANS_1A_UNLOADED,
+	Active_Ship.TRANS_1T_0_MOVES    = .TRANS_1T_UNLOADED,
+	Active_Ship.TRANS_2I_0_MOVES    = .TRANS_2I_UNLOADED,
+	Active_Ship.TRANS_1I_1A_0_MOVES = .TRANS_1I_1A_UNLOADED,
+	Active_Ship.TRANS_1I_1T_0_MOVES = .TRANS_1I_1T_UNLOADED,
+}
+
 unload_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for ship in Transports_With_Cargo {
-		for src_sea in gc.seas {
+		for &src_sea in gc.seas {
 			if src_sea.active_ships[ship] == 0 do continue
-			reset_valid_moves(gc, src_sea)
-			add_valid_unload_moves(gc, src_sea)
+			reset_valid_moves(gc, &src_sea)
+			add_valid_unload_moves(gc, &src_sea)
 			for src_sea.active_ships[ship] > 0 {
-				dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
-				dst_land := get_land(gc, dst_air_idx)
-				skip_ship(src_sea, dst_sea, ship) or_return
-				unload_unit_to_land(gc, dst_sea, ship)
+				dst_air_idx := get_move_input(gc, Ship_Names[ship], &src_sea) or_return
+				if dst_air_idx == src_sea.territory_index {
+					src_sea.active_ships[Skipped_Transports[ship]] += src_sea.active_ships[ship]
+					src_sea.active_ships[ship] = 0
+					continue
+				}
+				dst_land := get_land(gc, dst_air_idx) or_return
+				unload_unit_to_land(gc, dst_land, ship)
+				replace_ship(gc, &src_sea, ship, Transport_Unloaded[ship])
 			}
 		}
 	}
 	return true
+}
+
+Transport_Unload_Unit_1 := [?]Active_Army {
+	Active_Ship.TRANS_1I_0_MOVES    = .INF_0_MOVES,
+	Active_Ship.TRANS_1A_0_MOVES    = .ARTY_0_MOVES,
+	Active_Ship.TRANS_1T_0_MOVES    = .TANK_0_MOVES,
+	Active_Ship.TRANS_2I_0_MOVES    = .INF_0_MOVES,
+	Active_Ship.TRANS_1I_1A_0_MOVES = .INF_0_MOVES,
+	Active_Ship.TRANS_1I_1T_0_MOVES = .INF_0_MOVES,
+}
+
+Transport_Unloaded := [?]Active_Ship {
+	Active_Ship.TRANS_1I_0_MOVES    = .TRANS_EMPTY_0_MOVES,
+	Active_Ship.TRANS_1A_0_MOVES    = .TRANS_EMPTY_0_MOVES,
+	Active_Ship.TRANS_1T_0_MOVES    = .TRANS_EMPTY_0_MOVES,
+	Active_Ship.TRANS_2I_0_MOVES    = .TRANS_1I_0_MOVES,
+	Active_Ship.TRANS_1I_1A_0_MOVES = .TRANS_1A_0_MOVES,
+	Active_Ship.TRANS_1I_1T_0_MOVES = .TRANS_1T_0_MOVES,
+}
+
+unload_unit_to_land :: proc(gc: ^Game_Cache, dst_land: ^Land, ship: Active_Ship) {
+	army := Transport_Unload_Unit_1[ship]
+	dst_land.active_armies[army] += 1
+	dst_land.idle_armies[gc.cur_player.index][Active_Army_To_Idle[army]] += 1
+	dst_land.team_units[gc.cur_player.team.index] += 1
+}
+
+replace_ship :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship, new_ship: Active_Ship) {
+	src_sea.idle_ships[gc.cur_player.index][Active_Ship_To_Idle[new_ship]] += 1
+	src_sea.active_ships[new_ship] += 1
+	src_sea.idle_ships[gc.cur_player.index][Active_Ship_To_Idle[ship]] -= 1
+	src_sea.active_ships[ship] -= 1
 }

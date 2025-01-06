@@ -239,7 +239,7 @@ move_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship)
 	return true
 }
 
-skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
+skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> bool {
 	if src_sea != dst_sea do return false
 	src_sea.active_ships[Ships_Moved[ship]] += src_sea.active_ships[ship]
 	src_sea.active_ships[ship] = 0
