@@ -64,7 +64,7 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 		gc.lands[i].owner = &gc.players[land.owner]
 		gc.lands[i].factory_damage = land.factory_damage
 		gc.lands[i].factory_max_damage = land.factory_max_damage
-		gc.lands[i].bombard_max_damage = land.bombard_max_damage
+		gc.lands[i].max_bombards = land.max_bombards
 		gc.lands[i].idle_armies = land.idle_armies
 		gc.lands[i].active_armies = land.active_armies
 		load_territory_from_state(&gc.lands[i].territory, &land.territory_state)

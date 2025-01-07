@@ -6,10 +6,10 @@ Idle_Sea_For_Player :: [len(Idle_Ship)]int
 
 Game_State :: struct {
 	cur_player: int,
-	seed:         int,
-	money:        [PLAYERS_COUNT]int,
-	land_state:   #soa[len(LANDS_DATA)]Land_State,
-	sea_state:    #soa[SEAS_COUNT]Sea_State,
+	seed:       int,
+	money:      [PLAYERS_COUNT]int,
+	land_state: #soa[len(LANDS_DATA)]Land_State,
+	sea_state:  #soa[SEAS_COUNT]Sea_State,
 }
 
 Territory_State :: struct {
@@ -27,7 +27,7 @@ Land_State :: struct {
 	owner:                 int,
 	factory_damage:        int,
 	factory_max_damage:    int,
-	bombard_max_damage:    int,
+	max_bombards:          int,
 }
 
 Sea_State :: struct {

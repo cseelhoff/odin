@@ -276,7 +276,7 @@ unload_unit_to_land :: proc(gc: ^Game_Cache, dst_land: ^Land, ship: Active_Ship)
 	dst_land.active_armies[army] += 1
 	dst_land.idle_armies[gc.cur_player.index][Active_Army_To_Idle[army]] += 1
 	dst_land.team_units[gc.cur_player.team.index] += 1
-	dst_land.bombard_max_damage += 1
+	dst_land.max_bombards += 1
 }
 
 replace_ship :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship, new_ship: Active_Ship) {
