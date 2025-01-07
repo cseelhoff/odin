@@ -51,7 +51,7 @@ refresh_can_fighter_land_here :: proc(gc: ^Game_Cache) {
 			fighter_can_land_here(&land.territory)
 		}
 		// check for possiblity to build carrier under fighter
-		if (land.owner == gc.cur_player && land.factory_max_damage > 0) {
+		if (land.owner == gc.cur_player && land.factory_prod > 0) {
 			for &sea in sa.slice(&land.adjacent_seas) {
 				fighter_can_land_here(&sea.territory)
 			}
@@ -120,7 +120,7 @@ land_fighter_airs :: proc(gc: ^Game_Cache, plane: Active_Plane) -> (ok: bool) {
 land_fighter_air :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> (ok: bool) {
 	if src_air.active_planes[plane] == 0 do return true
 	refresh_can_fighter_land_here(gc)
-	sa.resize(&gc.valid_moves, 0)
+	gc.valid_moves.len = 0
 	add_valid_fighter_landing(gc, src_air, plane)
 	for src_air.active_planes[plane] > 0 {
 		land_next_fighter_in_air(gc, src_air, plane) or_return

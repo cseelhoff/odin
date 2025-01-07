@@ -14,6 +14,7 @@ Territory :: struct {
 	active_planes:              [len(Active_Plane)]int,
 	air_distances:              [TERRITORIES_COUNT]int,
 	skipped_moves:              [TERRITORIES_COUNT]bool, // Maybe this should be a bitset at the gc level
+	skipped_buys:							 	[len(Buy_Action)]bool,
 	combat_status:              Combat_Status,
 	builds_left:                int,
 	land_within_6_moves:        SA_Land_Pointers,

@@ -126,7 +126,7 @@ blitz_checks :: proc(
 	   check_for_conquer(gc, dst_land) &&
 	   army == .TANK_UNMOVED &&
 	   src_land.land_distances[dst_air_idx] == 1 &&
-	   dst_land.factory_max_damage == 0 {
+	   dst_land.factory_prod == 0 {
 		return .TANK_1_MOVES //blitz!
 	}
 	return Armies_Moved[army]

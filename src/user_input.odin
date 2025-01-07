@@ -22,13 +22,20 @@ import "core:strconv"
 // 	return get_ai_input(gc)
 // }
 
-get_retreat_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (dst_air_idx: Air_ID, ok: bool) {
+get_retreat_input :: proc(
+	gc: ^Game_Cache,
+	src_air: ^Territory,
+) -> (
+	dst_air_idx: Air_ID,
+	ok: bool,
+) {
+	dst_air_idx = Air_ID(gc.valid_moves.data[0])
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.cur_player.index].is_human {
-			fmt.print("Retreat From ", src_air.name, " Valid Moves: ")
+			fmt.println("Retreat From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
-				fmt.print(gc.territories[valid_move].name, ", ")
+				fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
 			}
 			dst_air_idx = Air_ID(get_user_input(gc))
 		}
@@ -45,12 +52,13 @@ get_move_input :: proc(
 	dst_air_idx: Air_ID,
 	ok: bool,
 ) {
+	dst_air_idx = Air_ID(gc.valid_moves.data[0])
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.cur_player.index].is_human {
-			fmt.print("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
+			fmt.println("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
 			for valid_move in sa.slice(&gc.valid_moves) {
-				fmt.print(gc.territories[valid_move].name, ", ")
+				fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
 			}
 			dst_air_idx = Air_ID(get_user_input(gc))
 		}
@@ -61,7 +69,7 @@ get_move_input :: proc(
 }
 
 get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
-	buffer: [256]byte
+	buffer: [10]byte
 	fmt.print("Enter a number between 0 and 255: ")
 	n, err := os.read(os.stdin, buffer[:])
 	if err != 0 {

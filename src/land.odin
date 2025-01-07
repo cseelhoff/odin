@@ -24,8 +24,8 @@ Land :: struct {
 	idle_armies:        [PLAYERS_COUNT]Idle_Army_For_Player,
 	active_armies:      [len(Active_Army)]int,
 	owner:              ^Player,
-	factory_damage:     int,
-	factory_max_damage: int,
+	factory_dmg:     int,
+	factory_prod: int,
 	max_bombards:       int,
 	lands_2_moves_away: sa.Small_Array(len(LANDS_DATA), Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
@@ -175,7 +175,7 @@ conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
 	}
 	dst_land.owner = new_owner
 	new_owner.income_per_turn += dst_land.value
-	if dst_land.factory_max_damage == 0 {
+	if dst_land.factory_prod == 0 {
 		return true
 	}
 	sa.push(&new_owner.factory_locations, dst_land)

@@ -91,7 +91,7 @@ add_meaningful_bomber_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air
 	if dst_air.can_bomber_land_here ||
 	   dst_air.team_units[gc.cur_player.team.enemy_team.index] != 0 ||
 	   is_land(dst_air) &&
-		   gc.lands[terr_idx].factory_damage < gc.lands[terr_idx].factory_max_damage * 2 {
+		   gc.lands[terr_idx].factory_dmg < gc.lands[terr_idx].factory_prod * 2 {
 		add_move_if_not_skipped(gc, src_air, dst_air)
 	}
 }
@@ -116,7 +116,7 @@ land_bomber_airs :: proc(gc: ^Game_Cache, plane: Active_Plane) -> (ok: bool) {
 land_bomber_air :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> (ok: bool) {
 	if src_air.active_planes[plane] == 0 do return true
 	refresh_can_bomber_land_here(gc)
-	sa.resize(&gc.valid_moves, 0)
+	gc.valid_moves.len = 0
 	add_valid_bomber_landing(gc, src_air, plane)
 	for src_air.active_planes[plane] > 0 {
 		land_next_bomber_in_air(gc, src_air, plane) or_return

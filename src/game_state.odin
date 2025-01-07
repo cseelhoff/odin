@@ -25,8 +25,8 @@ Land_State :: struct {
 	idle_armies:           [PLAYERS_COUNT]Idle_Army_For_Player,
 	active_armies:         [len(Active_Army)]int,
 	owner:                 int,
-	factory_damage:        int,
-	factory_max_damage:    int,
+	factory_dmg:        int,
+	factory_prod:    int,
 	max_bombards:          int,
 }
 

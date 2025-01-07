@@ -51,9 +51,9 @@
 				]
 			},
 			"owner": 0,
-			"factory_damage": 0,
-			"factory_max_damage": 0,
-			"bombard_max_damage": 0,
+			"factory_dmg": 0,
+			"factory_prod": 0,
+			"bombard_max": 0,
 			"land_units": [
 				{
 					"active": [
@@ -147,9 +147,9 @@
 				]
 			},
 			"owner": 0,
-			"factory_damage": 0,
-			"factory_max_damage": 0,
-			"bombard_max_damage": 0,
+			"factory_dmg": 0,
+			"factory_prod": 0,
+			"bombard_max": 0,
 			"land_units": [
 				{
 					"active": [
@@ -243,9 +243,9 @@
 				]
 			},
 			"owner": 0,
-			"factory_damage": 0,
-			"factory_max_damage": 0,
-			"bombard_max_damage": 0,
+			"factory_dmg": 0,
+			"factory_prod": 0,
+			"bombard_max": 0,
 			"land_units": [
 				{
 					"active": [
@@ -339,9 +339,9 @@
 				]
 			},
 			"owner": 0,
-			"factory_damage": 0,
-			"factory_max_damage": 0,
-			"bombard_max_damage": 0,
+			"factory_dmg": 0,
+			"factory_prod": 0,
+			"bombard_max": 0,
 			"land_units": [
 				{
 					"active": [
@@ -435,9 +435,9 @@
 				]
 			},
 			"owner": 0,
-			"factory_damage": 0,
-			"factory_max_damage": 0,
-			"bombard_max_damage": 0,
+			"factory_dmg": 0,
+			"factory_prod": 0,
+			"bombard_max": 0,
 			"land_units": [
 				{
 					"active": [
