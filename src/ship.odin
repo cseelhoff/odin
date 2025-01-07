@@ -18,6 +18,17 @@ Idle_Ship :: enum {
 	BS_DAMAGED,
 }
 
+DESTROYER_ATTACK :: 2
+CARRIER_ATTACK :: 1
+CRUISER_ATTACK :: 3
+BATTLESHIP_ATTACK :: 4
+
+DESTROYER_DEFENSE :: 2
+CARRIER_DEFENSE :: 2
+CRUISER_DEFENSE :: 3
+BATTLESHIP_DEFENSE :: 4
+
+
 Active_Ship :: enum {
 	TRANS_EMPTY_UNMOVED,
 	TRANS_EMPTY_2_MOVES,
@@ -66,6 +77,83 @@ Active_Ship :: enum {
 	BS_DAMAGED_0_MOVES,
 	BS_DAMAGED_BOMBARDED,
 }
+
+Attacker_Sea_Casualty_Order_1 := []Active_Ship {
+	.SUB_0_MOVES,
+	.DESTROYER_0_MOVES,
+}
+
+Air_Casualty_Order_Fighters := []Active_Plane {
+	.FIGHTER_0_MOVES,
+	.FIGHTER_1_MOVES,
+	.FIGHTER_2_MOVES,
+	.FIGHTER_3_MOVES,
+	.FIGHTER_4_MOVES,
+}
+
+Attacker_Sea_Casualty_Order_2 := []Active_Ship {
+	.CARRIER_0_MOVES,
+	.CRUISER_0_MOVES,
+}
+
+Air_Casualty_Order_Bombers := []Active_Plane {
+	.BOMBER_0_MOVES,
+	.BOMBER_1_MOVES,
+	.BOMBER_2_MOVES,
+	.BOMBER_3_MOVES,
+	.BOMBER_4_MOVES,
+	.BOMBER_5_MOVES,
+}
+Attacker_Sea_Casualty_Order_3 := []Active_Ship {
+	.BS_DAMAGED_BOMBARDED,
+}
+
+Attacker_Sea_Casualty_Order_4 := []Active_Ship {
+	.TRANS_EMPTY_0_MOVES,
+	.TRANS_1I_0_MOVES,
+	.TRANS_1A_0_MOVES,
+	.TRANS_1T_0_MOVES,
+	.TRANS_2I_0_MOVES,
+	.TRANS_1I_1A_0_MOVES,
+	.TRANS_1I_1T_0_MOVES,
+}
+
+Attacker_Land_Casualty_Order_1 := []Active_Army {
+	.INF_0_MOVES,
+	.ARTY_0_MOVES,
+	.TANK_0_MOVES,
+}
+
+Defender_Sub_Casualty := []Idle_Ship {
+	.SUB,
+}
+
+Defender_Sea_Casualty_Order_1 := []Idle_Ship {
+	.DESTROYER,
+	.CARRIER,
+	.CRUISER,
+}
+
+Defender_Sea_Casualty_Order_2 := []Idle_Ship {
+	.BS_DAMAGED,
+	.TRANS_EMPTY,
+	.TRANS_1I,
+	.TRANS_1A,
+	.TRANS_1T,
+	.TRANS_2I,
+	.TRANS_1I_1A,
+	.TRANS_1I_1T,
+}
+
+Defender_Land_Casualty_Order_1 := []Idle_Army {
+	.AAGUN,
+}
+Defender_Land_Casualty_Order_2 := []Idle_Army {
+	.INF,
+	.ARTY,
+	.TANK,
+}
+
 
 Ship_Names := [?]string {
 	Active_Ship.TRANS_EMPTY_UNMOVED  = "TRANS_EMPTY_UNMOVED",
@@ -231,7 +319,7 @@ move_ship_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok:
 
 move_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
 	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
-	check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
+	flag_for_enemy_combat(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
 	dst_sea := get_sea(gc, dst_air_idx)
 	if skip_ship(src_sea, dst_sea, ship) do return true
 	move_single_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)

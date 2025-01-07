@@ -11,6 +11,14 @@ Idle_Army :: enum {
 	AAGUN,
 }
 
+INFANTRY_ATTACK :: 1
+ARTILLERY_ATTACK :: 2
+TANK_ATTACK :: 3
+
+INFANTRY_DEFENSE :: 2
+ARTILLERY_DEFENSE :: 2
+TANK_DEFENSE :: 3
+
 Active_Army :: enum {
 	INF_UNMOVED,
 	INF_0_MOVES,
@@ -114,7 +122,7 @@ blitz_checks :: proc(
 	army: Active_Army,
 	src_land: ^Land,
 ) -> Active_Army {
-	if !check_for_enemy(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index) &&
+	if !flag_for_enemy_combat(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index) &&
 	   check_for_conquer(gc, dst_land) &&
 	   army == .TANK_UNMOVED &&
 	   src_land.land_distances[dst_air_idx] == 1 &&

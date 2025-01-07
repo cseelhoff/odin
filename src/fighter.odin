@@ -20,7 +20,7 @@ fighter_enemy_checks :: proc(
 	src_air: ^Territory,
 	dst_air: ^Territory,
 ) -> Active_Plane {
-	if check_for_enemy(dst_air, gc.cur_player.team.enemy_team.index) {
+	if flag_for_enemy_combat(dst_air, gc.cur_player.team.enemy_team.index) {
 		return Fighter_After_Moves[src_air.air_distances[dst_air.territory_index]]
 	}
 	return .FIGHTER_0_MOVES

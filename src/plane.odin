@@ -9,6 +9,12 @@ Idle_Plane :: enum {
 	BOMBER,
 }
 
+FIGHTER_ATTACK :: 3
+BOMBER_ATTACK :: 4
+
+FIGHTER_DEFENSE :: 4
+BOMBER_DEFENSE :: 1
+
 Active_Plane :: enum {
 	FIGHTER_UNMOVED, // distinct from 4_moves, for when ships placed under fighter
 	FIGHTER_4_MOVES,
@@ -23,6 +29,22 @@ Active_Plane :: enum {
 	BOMBER_2_MOVES,
 	BOMBER_1_MOVES,
 	BOMBER_0_MOVES,
+}
+
+Active_Plane_To_Idle := [?]Idle_Plane {
+	Active_Plane.FIGHTER_UNMOVED = .FIGHTER,
+	Active_Plane.FIGHTER_4_MOVES = .FIGHTER,
+	Active_Plane.FIGHTER_3_MOVES = .FIGHTER,
+	Active_Plane.FIGHTER_2_MOVES = .FIGHTER,
+	Active_Plane.FIGHTER_1_MOVES = .FIGHTER,
+	Active_Plane.FIGHTER_0_MOVES = .FIGHTER,
+	Active_Plane.BOMBER_UNMOVED  = .BOMBER,
+	Active_Plane.BOMBER_5_MOVES  = .BOMBER,
+	Active_Plane.BOMBER_4_MOVES  = .BOMBER,
+	Active_Plane.BOMBER_3_MOVES  = .BOMBER,
+	Active_Plane.BOMBER_2_MOVES  = .BOMBER,
+	Active_Plane.BOMBER_1_MOVES  = .BOMBER,
+	Active_Plane.BOMBER_0_MOVES  = .BOMBER,
 }
 
 Plane_Names := [?]string {
@@ -74,7 +96,13 @@ move_plane_air :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane
 	return true
 }
 
-move_next_plane_in_air :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> (ok: bool) {
+move_next_plane_in_air :: proc(
+	gc: ^Game_Cache,
+	src_air: ^Territory,
+	plane: Active_Plane,
+) -> (
+	ok: bool,
+) {
 	dst_air_idx := get_move_input(gc, Plane_Names[plane], src_air) or_return
 	dst_air := gc.territories[dst_air_idx]
 	if skip_plane(src_air, dst_air, plane, gc.cur_player.team.enemy_team.index) do return true
