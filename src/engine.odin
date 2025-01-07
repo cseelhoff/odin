@@ -357,12 +357,49 @@ check_for_conquer :: proc(gc: ^Game_Cache, dst_land: ^Land) -> bool {
 	return true
 }
 
-sea_bombardment :: proc(gc: ^Game_Cache, src_land: ^Land) {
-	//todo
+sea_bombardment :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_land: ^Land) {
+	//todo allied ships get unlimited bombards
+	if dst_land.max_bombards == 0 do return
+	attacker_damage := 0
+	for ship in Bombard_Ships {
+		bombarding_ships := 0
+		for player in sa.slice(&gc.cur_player.team.players) {
+			if player == gc.cur_player do continue
+			bombarding_ships = min(
+				dst_land.max_bombards,
+				src_sea.idle_ships[player.index][Active_Ship_To_Idle[ship]],
+			)
+			dst_land.max_bombards -= bombarding_ships
+			attacker_damage += bombarding_ships * Active_Ship_Attack[ship]
+		}
+		bombarding_ships = min(dst_land.max_bombards, src_sea.active_ships[ship])
+		dst_land.max_bombards -= bombarding_ships
+		attacker_damage += bombarding_ships * Active_Ship_Attack[ship]
+		src_sea.active_ships[ship] -= bombarding_ships
+		src_sea.active_ships[Ship_After_Bombard[ship]] += bombarding_ships
+		if dst_land.max_bombards == 0 do break
+	}
+	dst_land.max_bombards = 0
+	attack_hits := get_attacker_hits(gc, attacker_damage)
+	remove_land_defenders(gc, dst_land, &attack_hits)
 }
 
-fire_tact_aaguns :: proc(gc: ^Game_Cache, src_land: ^Land) {
+fire_tact_aaguns :: proc(gc: ^Game_Cache, dst_land: ^Land) {
 	//todo
+	total_aaguns := 0
+	for player in sa.slice(&gc.cur_player.team.enemy_players) {
+		total_aaguns += dst_land.idle_armies[player.index][Idle_Army.AAGUN]
+	}
+	total_air_units :=
+			dst_land.idle_planes[gc.cur_player.index][Idle_Plane.FIGHTER] +
+			dst_land.idle_planes[gc.cur_player.index][Idle_Plane.BOMBER]
+	defender_damage := min(total_aaguns * 3, total_air_units)
+	defender_hits := get_defender_hits(gc, defender_damage)
+	for (defender_hits > 0) {
+		defender_hits -= 1
+		if hit_my_planes(dst_land, Air_Casualty_Order_Fighters, gc.cur_player) do continue
+		if hit_my_planes(dst_land, Air_Casualty_Order_Bombers, gc.cur_player) do continue
+	}
 }
 
 attempt_conquer_land :: proc(gc: ^Game_Cache, src_land: ^Land) {
@@ -387,7 +424,9 @@ resolve_land_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 				continue
 			}
 			// bombard_shores
-			sea_bombardment(gc, &src_land)
+			for src_sea in sa.slice(&src_land.adjacent_seas) {
+				sea_bombardment(gc, src_sea, &src_land)
+			}
 			// check if can fire tactical aaguns
 			fire_tact_aaguns(gc, &src_land)
 			if src_land.team_units[gc.cur_player.team.index] == 0 {

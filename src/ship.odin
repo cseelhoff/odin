@@ -23,6 +23,18 @@ CARRIER_ATTACK :: 1
 CRUISER_ATTACK :: 3
 BATTLESHIP_ATTACK :: 4
 
+Active_Ship_Attack := [?]int {
+	Active_Ship.BATTLESHIP_0_MOVES = BATTLESHIP_ATTACK,
+	Active_Ship.BS_DAMAGED_0_MOVES = BATTLESHIP_ATTACK,
+	Active_Ship.CRUISER_0_MOVES = CRUISER_ATTACK,
+}
+
+Ship_After_Bombard := [?]Active_Ship {
+	Active_Ship.BATTLESHIP_0_MOVES = .BATTLESHIP_BOMBARDED,
+	Active_Ship.BS_DAMAGED_0_MOVES = .BS_DAMAGED_BOMBARDED,
+	Active_Ship.CRUISER_0_MOVES = .CRUISER_BOMBARDED,
+}
+
 DESTROYER_DEFENSE :: 2
 CARRIER_DEFENSE :: 2
 CRUISER_DEFENSE :: 3
@@ -153,6 +165,12 @@ Defender_Land_Casualty_Order_2 := []Idle_Army {
 	.ARTY,
 	.TANK,
 }
+Bombard_Ships := []Active_Ship {
+	Active_Ship.BATTLESHIP_0_MOVES,
+	Active_Ship.BS_DAMAGED_0_MOVES,
+	Active_Ship.CRUISER_0_MOVES,
+}
+
 
 
 Ship_Names := [?]string {
