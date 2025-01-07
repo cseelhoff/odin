@@ -257,6 +257,7 @@ Ships_Moved := [?]Active_Ship {
 	Active_Ship.TRANS_1I_1T_1_MOVES = .TRANS_1I_1T_0_MOVES,
 	Active_Ship.SUB_UNMOVED         = .SUB_0_MOVES,
 	Active_Ship.DESTROYER_UNMOVED   = .DESTROYER_0_MOVES,
+	Active_Ship.CARRIER_UNMOVED     = .CARRIER_0_MOVES,
 	Active_Ship.CRUISER_UNMOVED     = .CRUISER_0_MOVES,
 	Active_Ship.BATTLESHIP_UNMOVED  = .BATTLESHIP_0_MOVES,
 	Active_Ship.BS_DAMAGED_UNMOVED  = .BS_DAMAGED_0_MOVES,
@@ -337,11 +338,12 @@ move_ship_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok:
 
 move_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
 	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
+	gc.is_fighter_cache_current = false
 	flag_for_enemy_combat(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
 	dst_sea := get_sea(gc, dst_air_idx)
 	if skip_ship(src_sea, dst_sea, ship) do return true
 	move_single_ship(dst_sea, Ships_Moved[ship], gc.cur_player, ship, src_sea)
-	if ship == Active_Ship.CARRIER_0_MOVES do carry_allied_fighters(gc, src_sea, dst_sea)
+	if ship == Active_Ship.CARRIER_UNMOVED do carry_allied_fighters(gc, src_sea, dst_sea)
 	return true
 }
 

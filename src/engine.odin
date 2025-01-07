@@ -50,6 +50,7 @@ update_move_history :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air_idx: A
 		//apply_skip(gc, src_air, gc.territories[valid_action])
 		valid_action = sa.pop_back(&gc.valid_moves)
 	}
+	gc.clear_needed = true
 }
 
 // apply_skip :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
@@ -71,7 +72,6 @@ reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory) { 	// -> (dst_
 	sa.resize(&gc.valid_moves, 1)
 	//sa.set(&gc.valid_moves, 0, dst_air_idx)
 	sa.set(&gc.valid_moves, 0, int(territory.territory_index))
-	gc.clear_needed = true
 	//return
 }
 

@@ -64,9 +64,22 @@ Plane_Names := [?]string {
 }
 
 Plane_After_Moves := [?]Active_Plane {
-	Active_Plane.FIGHTER_UNMOVED = Active_Plane.FIGHTER_0_MOVES,
-	Active_Plane.BOMBER_UNMOVED  = Active_Plane.BOMBER_0_MOVES,
+	Active_Plane.FIGHTER_UNMOVED = .FIGHTER_0_MOVES,
+	Active_Plane.FIGHTER_4_MOVES = .FIGHTER_0_MOVES,
+	Active_Plane.FIGHTER_3_MOVES = .FIGHTER_0_MOVES,
+	Active_Plane.FIGHTER_2_MOVES = .FIGHTER_0_MOVES,
+	Active_Plane.FIGHTER_1_MOVES = .FIGHTER_0_MOVES,
+	Active_Plane.FIGHTER_0_MOVES = .FIGHTER_0_MOVES,
+	Active_Plane.BOMBER_UNMOVED  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_5_MOVES  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_4_MOVES  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_3_MOVES  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_2_MOVES  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_1_MOVES  = .BOMBER_0_MOVES,
+	Active_Plane.BOMBER_0_MOVES  = .BOMBER_0_MOVES,
 }
+
+Unmoved_Planes := [?]Active_Plane{Active_Plane.FIGHTER_UNMOVED, Active_Plane.BOMBER_UNMOVED}
 
 move_unmoved_planes :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for plane in Unmoved_Planes {
@@ -79,7 +92,7 @@ move_plane_airs :: proc(gc: ^Game_Cache, plane: Active_Plane) -> (ok: bool) {
 	debug_checks(gc)
 	gc.clear_needed = false
 	for &src_air in gc.territories {
-		move_plane_air(gc, src_air, plane)
+		move_plane_air(gc, src_air, plane) or_return
 	}
 	if gc.clear_needed do clear_move_history(gc)
 	return true
@@ -163,13 +176,22 @@ add_valid_plane_moves :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Activ
 
 refresh_plane_can_land_here :: proc(gc: ^Game_Cache, plane: Active_Plane) {
 	if plane == Active_Plane.FIGHTER_UNMOVED {
-		refresh_can_fighters_land_here(gc)
+		refresh_can_fighter_land_here(gc)
 	} else {
-		refresh_can_bombers_land_here(gc)
+		refresh_can_bomber_land_here(gc)
 	}
 }
 
 crash_air_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	fmt.eprintln("Error: crash_air_units not implemented")
 	return false
+}
+
+crash_unlandable_fighters :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> bool {
+	if gc.valid_moves.len > 0 do return false
+	planes_count := src_air.active_planes[plane]
+	src_air.team_units[gc.cur_player.team.index] -= planes_count
+	src_air.idle_planes[gc.cur_player.index][Active_Plane_To_Idle[plane]] -= planes_count
+	src_air.active_planes[plane] = 0
+	return true
 }

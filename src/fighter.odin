@@ -11,9 +11,14 @@ Fighter_After_Moves := [?]Active_Plane {
 	.FIGHTER_0_MOVES,
 }
 
-FIGHTER_MAX_MOVES :: 4
+Unlanded_Fighters := [?]Active_Plane {
+	.FIGHTER_1_MOVES,
+	.FIGHTER_2_MOVES,
+	.FIGHTER_3_MOVES,
+	.FIGHTER_4_MOVES,
+}
 
-Unmoved_Planes := [?]Active_Plane{Active_Plane.FIGHTER_UNMOVED, Active_Plane.BOMBER_UNMOVED}
+FIGHTER_MAX_MOVES :: 4
 
 fighter_enemy_checks :: proc(
 	gc: ^Game_Cache,
@@ -33,7 +38,7 @@ fighter_can_land_here :: proc(territory: ^Territory) {
 	}
 }
 
-refresh_can_fighters_land_here :: proc(gc: ^Game_Cache) {
+refresh_can_fighter_land_here :: proc(gc: ^Game_Cache) {
 	if gc.is_fighter_cache_current do return
 	// initialize all to false
 	for territory in gc.territories {
@@ -96,5 +101,73 @@ add_meaningful_fighter_move :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_ai
 }
 
 land_fighter_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
+	for plane in Unlanded_Fighters {
+		land_fighter_airs(gc, plane) or_return
+	}
+	return true
+}
+
+land_fighter_airs :: proc(gc: ^Game_Cache, plane: Active_Plane) -> (ok: bool) {
+	debug_checks(gc)
+	gc.clear_needed = false
+	for &src_air in gc.territories {
+		land_fighter_air(gc, src_air, plane) or_return
+	}
+	if gc.clear_needed do clear_move_history(gc)
+	return true
+}
+
+land_fighter_air :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> (ok: bool) {
+	if src_air.active_planes[plane] == 0 do return true
+	refresh_can_fighter_land_here(gc)
+	sa.resize(&gc.valid_moves, 0)
+	add_valid_fighter_landing(gc, src_air, plane)
+	for src_air.active_planes[plane] > 0 {
+		land_next_fighter_in_air(gc, src_air, plane) or_return
+	}
+	return true
+}
+
+add_valid_fighter_landing :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) {
+	for dst_air in sa.slice(&src_air.adjacent_airs) {
+		if dst_air.can_fighter_land_here {
+			add_move_if_not_skipped(gc, src_air, dst_air)
+		}
+	}
+	if plane == .FIGHTER_1_MOVES do return
+	for dst_air in sa.slice(&src_air.airs_2_moves_away) {
+		if dst_air.can_fighter_land_here {
+			add_move_if_not_skipped(gc, src_air, dst_air)
+		}
+	}
+	if plane == .FIGHTER_2_MOVES do return
+	for dst_air in sa.slice(&src_air.airs_3_moves_away) {
+		if dst_air.can_fighter_land_here {
+			add_move_if_not_skipped(gc, src_air, dst_air)
+		}
+	}
+	if plane == .FIGHTER_3_MOVES do return
+	for dst_air in sa.slice(&src_air.airs_4_moves_away) {
+		if dst_air.can_fighter_land_here {
+			add_move_if_not_skipped(gc, src_air, dst_air)
+		}
+	}
+}
+
+land_next_fighter_in_air :: proc(
+	gc: ^Game_Cache,
+	src_air: ^Territory,
+	plane: Active_Plane,
+) -> (
+	ok: bool,
+) {
+	if crash_unlandable_fighters(gc, src_air, plane) do return true
+	dst_air_idx := get_move_input(gc, Plane_Names[plane], src_air) or_return
+	dst_air := gc.territories[dst_air_idx]
+	move_single_plane(dst_air, Plane_After_Moves[plane], gc.cur_player, plane, src_air)
+	if carrier_now_empty(gc, dst_air_idx) {
+		valid_move_index := slice.linear_search(sa.slice(&gc.valid_moves), int(dst_air_idx)) or_return
+		sa.unordered_remove(&gc.valid_moves, valid_move_index)
+	}
+	return true
 }

@@ -24,8 +24,7 @@ move_aagun_land :: proc(gc: ^Game_Cache, src_land: ^Land) -> (ok: bool) {
 
 move_next_aagun_in_land :: proc(gc: ^Game_Cache, src_land: ^Land) -> (ok: bool) {
 	dst_air_idx := get_move_input(gc, Army_Names[Active_Army.AAGUN_UNMOVED], src_land) or_return
-	//if check_load_transport(gc, army, src_land, dst_air_idx) do return true
-	dst_land := &gc.lands[dst_air_idx]
+  dst_land := &gc.lands[dst_air_idx]
 	if skip_army(src_land, dst_land, Active_Army.AAGUN_UNMOVED) do return true
 	move_single_army(
 		dst_land,
@@ -41,4 +40,5 @@ add_valid_aagun_moves :: proc(gc: ^Game_Cache, src_land: ^Land) {
 	for dst_land in sa.slice(&src_land.adjacent_lands) {
 		if src_land.skipped_moves[dst_land.territory_index] do continue
 		sa.push(&gc.valid_moves, int(dst_land.territory_index))
-	}}
+	}
+}
