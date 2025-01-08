@@ -52,9 +52,14 @@ Active_Army_Names := [?]string {
 
 Active_Army_To_Idle := [?]Idle_Army {
 	Active_Army.INF_UNMOVED   = .INF,
+	Active_Army.INF_0_MOVES   = .INF,
 	Active_Army.ARTY_UNMOVED  = .ARTY,
+	Active_Army.ARTY_0_MOVES  = .ARTY,
 	Active_Army.TANK_UNMOVED  = .TANK,
+	Active_Army.TANK_1_MOVES  = .TANK,
+	Active_Army.TANK_0_MOVES  = .TANK,
 	Active_Army.AAGUN_UNMOVED = .AAGUN,
+	Active_Army.AAGUN_0_MOVES = .AAGUN,
 }
 
 Armies_Moved := [?]Active_Army {

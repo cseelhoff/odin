@@ -76,6 +76,7 @@ get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
 	buffer: [10]byte	
 	fmt.print("Enter a number between 0 and 255: ")
 	n, err := os.read(os.stdin, buffer[:])
+	fmt.println()
 	if err != 0 {
 		return
 	}
@@ -91,7 +92,7 @@ get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
 
 get_ai_input :: proc(gc: ^Game_Cache) -> (ai_input: int) {
 	gc.answers_remaining -= 1
-	if (gc.selected_action >= ACTION_COUNT) {
+	if (gc.selected_action >= MAX_VALID_MOVES) {
 		fmt.eprintln("Invalid input ", gc.selected_action)
 		gc.seed += 1
 		return gc.valid_moves.data[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.len]
@@ -108,12 +109,12 @@ get_ai_input :: proc(gc: ^Game_Cache) -> (ai_input: int) {
 print_game_state :: proc(gc: ^Game_Cache) {
 	color := PLAYER_DATA[gc.cur_player.index].color
 	fmt.println("Current Player: ", color, PLAYER_DATA[gc.cur_player.index].name)
-	fmt.println("Money: ", gc.cur_player.money, DEF_COLOR)
+	fmt.println("Money: ", gc.cur_player.money, DEF_COLOR, "\n")
 	for territory in gc.territories {
 		if int(territory.territory_index) < LANDS_COUNT {
 			land := get_land(gc, territory.territory_index) 
 			fmt.print(PLAYER_DATA[land.owner.index].color)
-			fmt.println("\n",territory.name, "builds:", land.builds_left, land.combat_status, land.factory_dmg, "/", land.factory_prod, "bombards:", land.max_bombards)
+			fmt.println(territory.name, "builds:", land.builds_left, land.combat_status, land.factory_dmg, "/", land.factory_prod, "bombards:", land.max_bombards)
 			fmt.print(PLAYER_DATA[gc.cur_player.index].color)
 			for army, army_idx in land.active_armies {
 				if army > 0 {
@@ -139,10 +140,9 @@ print_game_state :: proc(gc: ^Game_Cache) {
 					}
 				}
 			}
-			fmt.print(DEF_COLOR)
 		} else {
 			sea := get_sea(gc, territory.territory_index)
-			fmt.println("\n",territory.name)
+			fmt.println(territory.name)
 			fmt.print(PLAYER_DATA[gc.cur_player.index].color)
 			for ship, ship_idx in sea.active_ships {
 				if ship > 0 {
@@ -159,7 +159,7 @@ print_game_state :: proc(gc: ^Game_Cache) {
 				fmt.print(PLAYER_DATA[player.index].color)
 				for ship, ship_idx in sea.idle_ships[player.index] {
 					if ship > 0 {
-						fmt.println(Idle_Army_Names[ship_idx], ":", ship)
+						fmt.println(Idle_Ship_Names[ship_idx], ":", ship)
 					}
 				}
 				for plane, plane_idx in sea.idle_planes[player.index] {
@@ -168,7 +168,7 @@ print_game_state :: proc(gc: ^Game_Cache) {
 					}
 				}
 			}
-			fmt.print(DEF_COLOR)
-		}		
+		}
+		fmt.println(DEF_COLOR)
 	}
 }

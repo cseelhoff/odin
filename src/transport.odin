@@ -84,14 +84,14 @@ Transport_Load_Unit := [len(Idle_Army)][len(Active_Ship)]Active_Ship {
 	},
 }
 
-Idle_Ship_Space := [?][]Active_Ship {
-	Army_Sizes.LARGE = {.TRANS_EMPTY_UNMOVED, .TRANS_1I_UNMOVED},
-	Army_Sizes.SMALL = {.TRANS_EMPTY_UNMOVED, .TRANS_1I_UNMOVED, .TRANS_1A_UNMOVED, .TRANS_1T_UNMOVED},
+Idle_Ship_Space := [?][]Idle_Ship {
+	Army_Sizes.LARGE = {.TRANS_EMPTY, .TRANS_1I},
+	Army_Sizes.SMALL = {.TRANS_EMPTY, .TRANS_1I, .TRANS_1A, .TRANS_1T},
 }
 
 Active_Ship_Space := [?][]Active_Ship {
-	Army_Sizes.LARGE = {Active_Ship.TRANS_1I_2_MOVES, Active_Ship.TRANS_EMPTY_2_MOVES, Active_Ship.TRANS_1I_1_MOVES, Active_Ship.TRANS_EMPTY_1_MOVES, Active_Ship.TRANS_1I_0_MOVES, Active_Ship.TRANS_EMPTY_0_MOVES},
-	Army_Sizes.SMALL = {Active_Ship.TRANS_1T_2_MOVES, Active_Ship.TRANS_1A_2_MOVES, Active_Ship.TRANS_1T_1_MOVES, Active_Ship.TRANS_1A_1_MOVES, Active_Ship.TRANS_1T_0_MOVES, Active_Ship.TRANS_1A_0_MOVES},
+	Army_Sizes.LARGE = {.TRANS_1I_2_MOVES, .TRANS_EMPTY_2_MOVES, .TRANS_1I_1_MOVES, .TRANS_EMPTY_1_MOVES, .TRANS_1I_0_MOVES, .TRANS_EMPTY_0_MOVES},
+	Army_Sizes.SMALL = {.TRANS_1T_2_MOVES, .TRANS_1A_2_MOVES, .TRANS_1T_1_MOVES, .TRANS_1A_1_MOVES, .TRANS_1T_0_MOVES, .TRANS_1A_0_MOVES},
 }
 
 stage_transports :: proc(gc: ^Game_Cache) -> (ok: bool) {

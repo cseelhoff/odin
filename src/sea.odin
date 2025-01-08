@@ -54,6 +54,10 @@ Sea_ID :: enum {
 	Baltic,
 }
 
+Canal_ID :: enum {
+	Pacific_Baltic,
+}
+
 SEAS_DATA :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
 CANALS := [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}

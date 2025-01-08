@@ -7,6 +7,7 @@ import "core:slice"
 when ODIN_DEBUG {
 	debug_checks :: proc(gc: ^Game_Cache) {
 		// No-op
+		// print_game_state(gc)
 	}
 } else {
 	debug_checks :: proc(gc: ^Game_Cache) {
@@ -155,29 +156,11 @@ rotate_turns :: proc(gc: ^Game_Cache) {
 		sea.active_ships[Active_Ship.CRUISER_UNMOVED] = idle_ships[Idle_Ship.CRUISER]
 		sea.active_ships[Active_Ship.BATTLESHIP_UNMOVED] = idle_ships[Idle_Ship.BATTLESHIP]
 		sea.active_ships[Active_Ship.BS_DAMAGED_UNMOVED] = idle_ships[Idle_Ship.BS_DAMAGED]
-		sea.allied_carriers = 0
 		mem.zero_slice(sea.active_planes[:])
 		idle_planes := &sea.idle_planes[gc.cur_player.index]
 		sea.active_planes[Active_Plane.FIGHTER_UNMOVED] = idle_planes[Idle_Plane.FIGHTER]
 		sea.active_planes[Active_Plane.BOMBER_UNMOVED] = idle_planes[Idle_Plane.BOMBER]
-		for ally in sa.slice(&gc.cur_player.team.players) {
-			sea.allied_carriers += sea.idle_ships[ally.index][Idle_Ship.CARRIER]
-		}
-		sea.enemy_fighters_total = 0
-		sea.enemy_submarines_total = 0
-		sea.enemy_destroyer_total = 0
-		sea.enemy_blockade_total = 0
-		for enemy in sa.slice(&gc.cur_player.team.enemy_players) {
-			sea.enemy_fighters_total += sea.idle_ships[enemy.index][Idle_Plane.FIGHTER]
-			sea.enemy_submarines_total += sea.idle_ships[enemy.index][Idle_Ship.SUB]
-			sea.enemy_destroyer_total += sea.idle_ships[enemy.index][Idle_Ship.DESTROYER]
-			sea.enemy_blockade_total +=
-				sea.idle_ships[enemy.index][Idle_Ship.CARRIER] +
-				sea.idle_ships[enemy.index][Idle_Ship.CRUISER] +
-				sea.idle_ships[enemy.index][Idle_Ship.BATTLESHIP] +
-				sea.idle_ships[enemy.index][Idle_Ship.BS_DAMAGED]
-		}
-		sea.enemy_blockade_total += sea.enemy_destroyer_total
 	}
+	count_sea_unit_totals(gc)
 	load_open_canals(gc)
 }

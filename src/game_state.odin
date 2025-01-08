@@ -53,8 +53,10 @@ load_default_game_state :: proc(gs: ^Game_State) -> (ok: bool) {
 	}
 	for &land, land_idx in gs.land_states {
 		land.owner = get_player_idx_from_string(LANDS_DATA[land_idx].owner) or_return
+		land.idle_armies[land.owner][Idle_Army.INF] = 1
 		if land.owner == gs.cur_player {
 			land.builds_left = land.factory_prod
+			land.active_armies[Active_Army.INF_UNMOVED] = 1
 		}
 	}
 	return true

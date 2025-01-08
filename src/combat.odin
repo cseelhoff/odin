@@ -206,7 +206,7 @@ get_attacker_hits :: proc(gc: ^Game_Cache, attacker_damage: int) -> (attacker_hi
 	attacker_hits = attacker_damage / DICE_SIDES
 	// todo why does this check for 2 answers remaining?
 	if gc.answers_remaining <= 1 {
-		if gc.cur_player.team != gc.unlucky_player.team { 	// attacker is lucky
+		if gc.cur_player.team.enemy_team.index in gc.unlucky_teams { 	// attacker is lucky
 			attacker_hits += 0 < attacker_damage % DICE_SIDES ? 1 : 0 // no dice, round up
 		}
 	} else {
@@ -220,7 +220,7 @@ get_attacker_hits :: proc(gc: ^Game_Cache, attacker_damage: int) -> (attacker_hi
 get_defender_hits :: proc(gc: ^Game_Cache, defender_damage: int) -> (defender_hits: int) {
 	defender_hits = defender_damage / DICE_SIDES
 	if gc.answers_remaining <= 1 {
-		if gc.cur_player.team == gc.unlucky_player.team { 	// attacker is unlucky
+		if gc.cur_player.team.index in gc.unlucky_teams { 	// attacker is unlucky
 			defender_hits += 0 < defender_damage % DICE_SIDES ? 1 : 0 // no dice, round up
 		}
 	} else {

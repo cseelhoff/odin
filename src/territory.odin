@@ -14,7 +14,7 @@ Territory :: struct {
 	active_planes:              [len(Active_Plane)]int,
 	air_distances:              [TERRITORIES_COUNT]int,
 	skipped_moves:              [TERRITORIES_COUNT]bool, // Maybe this should be a bitset at the gc level
-	skipped_buys:							 	[len(Buy_Action)]bool,
+	skipped_buys:               [len(Buy_Action)]bool,
 	combat_status:              Combat_Status,
 	//builds_left:                int,
 	land_within_6_moves:        SA_Land_Pointers,
@@ -72,7 +72,7 @@ COASTAL_CONNECTIONS := [?]Coastal_Connection_String {
 initialize_territories :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
 	for &land, land_idx in lands {
 		land.land_index = Land_ID(land_idx)
-		land.territory_index = Air_ID(land_idx)
+		land.territory_index = Air_ID(land_idx)		
 		territories[land.territory_index] = &land.territory
 	}
 	for &sea, sea_idx in seas {
