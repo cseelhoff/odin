@@ -121,27 +121,6 @@ update_factory_history :: proc(gc: ^Game_Cache, action: int) {
 	}
 }
 
-get_buy_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (action: Buy_Action, ok: bool) {
-	action = action_idx_to_buy(gc.valid_moves.data[0])
-	if gc.valid_moves.len > 1 {
-		if gc.answers_remaining == 0 do return .SKIP_BUY, false
-		if PLAYER_DATA[gc.cur_player.index].is_human {
-			print_game_state(gc)
-			fmt.print(PLAYER_DATA[gc.cur_player.index].color)
-			fmt.println("Buy At", src_air.name)
-			for buy_action_idx in sa.slice(&gc.valid_moves) {
-				fmt.print(buy_action_idx, Buy_Names[action_idx_to_buy(buy_action_idx)], ", ")
-			}
-			fmt.println(DEF_COLOR)
-			action = action_idx_to_buy(get_user_input(gc))
-		} else {
-			action = action_idx_to_buy(get_ai_input(gc))
-		}
-	}
-	update_buy_history(gc, src_air, action)
-	return action, true
-}
-
 update_buy_history :: proc(gc: ^Game_Cache, src_air: ^Territory, action: Buy_Action) {
 	assert(gc.valid_moves.len > 0)
 	valid_action_idx := gc.valid_moves.data[gc.valid_moves.len - 1]

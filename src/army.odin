@@ -159,14 +159,25 @@ move_single_army :: proc(
 	src_land.team_units[player.team.index] -= 1
 }
 
-add_if_boat_available :: proc(gc: ^Game_Cache, src_land: ^Land, dst_sea: ^Sea, army: Active_Army) {
+is_boat_available :: proc(
+	gc: ^Game_Cache,
+	src_land: ^Land,
+	dst_sea: ^Sea,
+	army: Active_Army,
+) -> bool {
 	idle_ships := &dst_sea.idle_ships[gc.cur_player.index]
 	for transport in Idle_Ship_Space[Army_Size[army]] {
 		if idle_ships[transport] > 0 {
-			if (!src_land.skipped_moves[dst_sea.territory_index]) {
-				sa.push(&gc.valid_moves, int(dst_sea.territory_index))
-				break
-			}
+			return true
+		}
+	}
+	return false
+}
+
+add_if_boat_available :: proc(gc: ^Game_Cache, src_land: ^Land, dst_sea: ^Sea, army: Active_Army) {
+	if is_boat_available(gc, src_land, dst_sea, army) {
+		if !src_land.skipped_moves[dst_sea.territory_index] {
+			sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 		}
 	}
 }
@@ -228,11 +239,16 @@ check_load_transport :: proc(
 ) -> (
 	ok: bool,
 ) {
-	if int(dst_air_idx) <= LANDS_COUNT do return false
+	if int(dst_air_idx) < LANDS_COUNT do return false
 	dst_sea := get_sea(gc, dst_air_idx)
 	load_available_transport(army, src_land, dst_sea, gc.cur_player.index)
-	sa.resize(&gc.valid_moves, 1) // reset valid moves since transport cargo has changed
-	add_valid_army_moves(gc, src_land, army) //reset valid moves since transport cargo has changed
+	if is_boat_available(gc, src_land, dst_sea, army) do return true
+	action_idx, found := slice.linear_search(sa.slice(&gc.valid_moves), int(dst_air_idx))
+	if !found {
+		fmt.eprintln("Error: Previous action not found in list")
+		return false
+	}
+	sa.unordered_remove(&gc.valid_moves, action_idx)
 	return true
 }
 

@@ -15,16 +15,11 @@ Player_Data :: struct {
 }
 
 PLAYER_DATA := [?]Player_Data {
-	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow", is_human = true},
-	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin", is_human = true},
-	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London", is_human = true},
-	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo", is_human = true},
-	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington", is_human = true},
-	// {team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow"},
-	// {team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin"},
-	// {team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London"},
-	// {team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
-	// {team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington"},
+	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow"},
+	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin"},
+	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London"},
+	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
+	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington"},
 }
 
 DEF_COLOR :: "\033[1;0m"

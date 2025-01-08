@@ -23,16 +23,24 @@ main :: proc() {
 	//save_json(game_state, "game_state.json")
 	//load_game_data(&game_state, "game_state.json")
 	load_cache_from_state(&game_cache, &game_state)
-	game_cache.answers_remaining = 100
-	game_cache.seed = 0
+	game_cache.answers_remaining = 10000
+	game_cache.seed = 2
 
+	// PLAYER_DATA[0].is_human = true
+	// PLAYER_DATA[1].is_human = true
+	// PLAYER_DATA[2].is_human = true
+	// PLAYER_DATA[3].is_human = true
+	// PLAYER_DATA[4].is_human = true
+	
 	for (game_cache.answers_remaining > 0) {
 		ok = play_full_turn(&game_cache)
 		if !ok {
 			fmt.eprintln("Error playing full turn")
+			fmt.println(game_cache.answers_remaining)
 			return
 		}
 	}
+	fmt.println(game_cache.answers_remaining)
 	// MCTSNode* root = mcts_search(game_state, iterations);
 	// uint best_action = select_best_action(root);
 	// print_mcts(root);

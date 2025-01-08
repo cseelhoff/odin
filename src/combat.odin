@@ -100,11 +100,11 @@ sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: Air_ID) -> bool
 		src_sea.team_units[team_idx] -= number_of_ships
 		for player in sa.slice(&gc.cur_player.team.players) {
 			if player == gc.cur_player do continue
-			number_of_ships = src_sea.idle_ships[player.index][active_ship]
+			number_of_ships = src_sea.idle_ships[player.index][Active_Ship_To_Idle[active_ship]]
 			dst_sea.idle_ships[player.index][Active_Ship_To_Idle[active_ship]] += number_of_ships
-			dst_sea.team_units[player.index] += number_of_ships
+			dst_sea.team_units[team_idx] += number_of_ships
 			src_sea.idle_ships[player.index][Active_Ship_To_Idle[active_ship]] = 0
-			src_sea.team_units[player.index] -= number_of_ships
+			src_sea.team_units[team_idx] -= number_of_ships
 		}
 	}
 	src_sea.combat_status = .POST_COMBAT
@@ -212,7 +212,7 @@ get_attacker_hits :: proc(gc: ^Game_Cache, attacker_damage: int) -> (attacker_hi
 	} else {
 		attacker_hits +=
 			RANDOM_NUMBERS[gc.seed] % DICE_SIDES < attacker_damage % DICE_SIDES ? 1 : 0
-		gc.seed += 1
+		gc.seed = (gc.seed + 1) % RANDOM_MAX
 	}
 	return
 }
@@ -226,7 +226,7 @@ get_defender_hits :: proc(gc: ^Game_Cache, defender_damage: int) -> (defender_hi
 	} else {
 		defender_hits +=
 			RANDOM_NUMBERS[gc.seed] % DICE_SIDES < defender_damage % DICE_SIDES ? 1 : 0
-		gc.seed += 1
+		gc.seed = (gc.seed + 1) % RANDOM_MAX
 	}
 	return
 }

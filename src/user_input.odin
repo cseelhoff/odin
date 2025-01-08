@@ -22,6 +22,18 @@ import "core:strconv"
 // 	return get_ai_input(gc)
 // }
 
+PRINT_AI_ACTIONS :: false
+
+print_retreat_prompt :: proc(gc: ^Game_Cache, src_air: ^Territory) {
+	print_game_state(gc)
+	fmt.print(PLAYER_DATA[gc.cur_player.index].color)
+	fmt.println("Retreat From ", src_air.name, " Valid Moves: ")
+	for valid_move in sa.slice(&gc.valid_moves) {
+		fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
+	}
+	fmt.println(DEF_COLOR)
+}
+
 get_retreat_input :: proc(
 	gc: ^Game_Cache,
 	src_air: ^Territory,
@@ -33,17 +45,25 @@ get_retreat_input :: proc(
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.cur_player.index].is_human {
-			print_game_state(gc)
-			fmt.println("Retreat From ", src_air.name, " Valid Moves: ")
-			for valid_move in sa.slice(&gc.valid_moves) {
-				fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
-			}
+			print_retreat_prompt(gc, src_air)
 			dst_air_idx = Air_ID(get_user_input(gc))
 		} else {
+			if PRINT_AI_ACTIONS do print_retreat_prompt(gc, src_air)
 			dst_air_idx = Air_ID(get_ai_input(gc))
+			if PRINT_AI_ACTIONS do fmt.println("AI Action:", dst_air_idx)
 		}
 	}
 	return dst_air_idx, true
+}
+
+print_move_prompt :: proc(gc: ^Game_Cache, unit_name: string, src_air: ^Territory) {
+	print_game_state(gc)
+	fmt.print(PLAYER_DATA[gc.cur_player.index].color)
+	fmt.println("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
+	for valid_move in sa.slice(&gc.valid_moves) {
+		fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
+	}
+	fmt.println(DEF_COLOR)
 }
 
 get_move_input :: proc(
@@ -58,14 +78,12 @@ get_move_input :: proc(
 	if gc.valid_moves.len > 1 {
 		if gc.answers_remaining == 0 do return dst_air_idx, false
 		if PLAYER_DATA[gc.cur_player.index].is_human {
-			print_game_state(gc)
-			fmt.println("Moving ", unit_name, " From ", src_air.name, " Valid Moves: ")
-			for valid_move in sa.slice(&gc.valid_moves) {
-				fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
-			}
+			print_move_prompt(gc, unit_name, src_air)
 			dst_air_idx = Air_ID(get_user_input(gc))
 		} else {
+			if PRINT_AI_ACTIONS do print_move_prompt(gc, unit_name, src_air)			
 			dst_air_idx = Air_ID(get_ai_input(gc))
+			if PRINT_AI_ACTIONS do fmt.println("AI Action:", dst_air_idx)
 		}
 	}
 	update_move_history(gc, src_air, dst_air_idx)
@@ -73,7 +91,7 @@ get_move_input :: proc(
 }
 
 get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
-	buffer: [10]byte	
+	buffer: [10]byte
 	fmt.print("Enter a number between 0 and 255: ")
 	n, err := os.read(os.stdin, buffer[:])
 	fmt.println()
@@ -90,20 +108,49 @@ get_user_input :: proc(gc: ^Game_Cache) -> (user_input: int = 0) {
 	return int_input
 }
 
+FULLY_RANDOM_AI :: true
+
 get_ai_input :: proc(gc: ^Game_Cache) -> (ai_input: int) {
 	gc.answers_remaining -= 1
-	if (gc.selected_action >= MAX_VALID_MOVES) {
-		fmt.eprintln("Invalid input ", gc.selected_action)
-		gc.seed += 1
+	if (FULLY_RANDOM_AI || gc.selected_action >= MAX_VALID_MOVES) {
+		//fmt.eprintln("Invalid input ", gc.selected_action)
+		gc.seed = (gc.seed + 1) % RANDOM_MAX
 		return gc.valid_moves.data[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.len]
 	}
 	_, found := slice.linear_search(sa.slice(&gc.valid_moves), gc.selected_action)
 	if !found {
 		fmt.eprintln("Invalid input ", gc.selected_action)
-		gc.seed += 1
+		gc.seed = (gc.seed + 1) % RANDOM_MAX
 		return gc.valid_moves.data[RANDOM_NUMBERS[gc.seed] % gc.valid_moves.len]
 	}
 	return gc.selected_action
+}
+
+print_buy_prompt :: proc(gc: ^Game_Cache, src_air: ^Territory) {
+	print_game_state(gc)
+	fmt.print(PLAYER_DATA[gc.cur_player.index].color)
+	fmt.println("Buy At", src_air.name)
+	for buy_action_idx in sa.slice(&gc.valid_moves) {
+		fmt.print(buy_action_idx, Buy_Names[action_idx_to_buy(buy_action_idx)], ", ")
+	}
+	fmt.println(DEF_COLOR)
+}
+
+get_buy_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (action: Buy_Action, ok: bool) {
+	action = action_idx_to_buy(gc.valid_moves.data[0])
+	if gc.valid_moves.len > 1 {
+		if gc.answers_remaining == 0 do return .SKIP_BUY, false
+		if PLAYER_DATA[gc.cur_player.index].is_human {
+			print_buy_prompt(gc, src_air)
+			action = action_idx_to_buy(get_user_input(gc))
+		} else {
+			if PRINT_AI_ACTIONS do print_buy_prompt(gc, src_air)
+			action = action_idx_to_buy(get_ai_input(gc))
+			if PRINT_AI_ACTIONS do fmt.println("AI Action:", action)
+		}
+	}
+	update_buy_history(gc, src_air, action)
+	return action, true
 }
 
 print_game_state :: proc(gc: ^Game_Cache) {
@@ -112,9 +159,19 @@ print_game_state :: proc(gc: ^Game_Cache) {
 	fmt.println("Money: ", gc.cur_player.money, DEF_COLOR, "\n")
 	for territory in gc.territories {
 		if int(territory.territory_index) < LANDS_COUNT {
-			land := get_land(gc, territory.territory_index) 
+			land := get_land(gc, territory.territory_index)
 			fmt.print(PLAYER_DATA[land.owner.index].color)
-			fmt.println(territory.name, "builds:", land.builds_left, land.combat_status, land.factory_dmg, "/", land.factory_prod, "bombards:", land.max_bombards)
+			fmt.println(
+				territory.name,
+				"builds:",
+				land.builds_left,
+				land.combat_status,
+				land.factory_dmg,
+				"/",
+				land.factory_prod,
+				"bombards:",
+				land.max_bombards,
+			)
 			fmt.print(PLAYER_DATA[gc.cur_player.index].color)
 			for army, army_idx in land.active_armies {
 				if army > 0 {

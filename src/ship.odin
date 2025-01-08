@@ -115,7 +115,7 @@ Air_Casualty_Order_Fighters := []Active_Plane {
 	.FIGHTER_4_MOVES,
 }
 
-Attacker_Sea_Casualty_Order_2 := []Active_Ship{.CARRIER_0_MOVES, .CRUISER_0_MOVES}
+Attacker_Sea_Casualty_Order_2 := []Active_Ship{.CARRIER_0_MOVES, .CRUISER_BOMBARDED}
 
 Air_Casualty_Order_Bombers := []Active_Plane {
 	.BOMBER_0_MOVES,
@@ -156,11 +156,7 @@ Defender_Sea_Casualty_Order_2 := []Idle_Ship {
 
 Defender_Land_Casualty_Order_1 := []Idle_Army{.AAGUN}
 Defender_Land_Casualty_Order_2 := []Idle_Army{.INF, .ARTY, .TANK}
-Bombard_Ships := []Active_Ship {
-	Active_Ship.BATTLESHIP_0_MOVES,
-	Active_Ship.BS_DAMAGED_0_MOVES,
-	Active_Ship.CRUISER_0_MOVES,
-}
+Bombard_Ships := []Active_Ship{.BATTLESHIP_0_MOVES, .BS_DAMAGED_0_MOVES, .CRUISER_0_MOVES}
 
 
 Active_Ship_Names := [?]string {
@@ -213,25 +209,26 @@ Active_Ship_Names := [?]string {
 }
 
 Active_Ship_To_Idle := [?]Idle_Ship {
-	Active_Ship.TRANS_EMPTY_0_MOVES = .TRANS_EMPTY,
-	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY,
-	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I,
-	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A,
-	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T,
-	Active_Ship.SUB_0_MOVES         = .SUB,
-	Active_Ship.DESTROYER_0_MOVES   = .DESTROYER,
-	Active_Ship.CARRIER_0_MOVES     = .CARRIER,
-	Active_Ship.CRUISER_0_MOVES     = .CRUISER,
-	Active_Ship.BATTLESHIP_0_MOVES  = .BATTLESHIP,
+	Active_Ship.TRANS_EMPTY_0_MOVES  = .TRANS_EMPTY,
+	Active_Ship.TRANS_EMPTY_UNMOVED  = .TRANS_EMPTY,
+	Active_Ship.TRANS_1I_UNMOVED     = .TRANS_1I,
+	Active_Ship.TRANS_1A_UNMOVED     = .TRANS_1A,
+	Active_Ship.TRANS_1T_UNMOVED     = .TRANS_1T,
+	Active_Ship.SUB_0_MOVES          = .SUB,
+	Active_Ship.DESTROYER_0_MOVES    = .DESTROYER,
+	Active_Ship.CARRIER_0_MOVES      = .CARRIER,
+	Active_Ship.CRUISER_0_MOVES      = .CRUISER,
+	Active_Ship.BATTLESHIP_0_MOVES   = .BATTLESHIP,
+	Active_Ship.BS_DAMAGED_BOMBARDED = .BS_DAMAGED,
 }
 
 Unmoved_Blockade_Ships := [?]Active_Ship {
-	Active_Ship.SUB_UNMOVED,
-	Active_Ship.DESTROYER_UNMOVED,
-	Active_Ship.CARRIER_UNMOVED,
-	Active_Ship.CRUISER_UNMOVED,
-	Active_Ship.BATTLESHIP_UNMOVED,
-	Active_Ship.BS_DAMAGED_UNMOVED,
+	.SUB_UNMOVED,
+	.DESTROYER_UNMOVED,
+	.CARRIER_UNMOVED,
+	.CRUISER_UNMOVED,
+	.BATTLESHIP_UNMOVED,
+	.BS_DAMAGED_UNMOVED,
 }
 
 Ships_Moved := [?]Active_Ship {

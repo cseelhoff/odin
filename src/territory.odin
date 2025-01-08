@@ -12,7 +12,7 @@ Territory :: struct {
 	name:                       string,
 	idle_planes:                [PLAYERS_COUNT]Idle_Plane_For_Player,
 	active_planes:              [len(Active_Plane)]int,
-	air_distances:              [TERRITORIES_COUNT]int,
+	air_distances:              [TERRITORIES_COUNT]u8,
 	skipped_moves:              [TERRITORIES_COUNT]bool, // Maybe this should be a bitset at the gc level
 	skipped_buys:               [len(Buy_Action)]bool,
 	combat_status:              Combat_Status,
@@ -94,8 +94,8 @@ initialize_costal_connections :: proc(lands: ^Lands, seas: ^Seas) -> (ok: bool) 
 
 initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_Pointers) {
 	for &terr, territory_index in territories {
-		INFINITY :: 255
-		mem.set(&terr.air_distances, INFINITY, TERRITORIES_COUNT)
+		INFINITY :: 127 // must be less than half of u8
+		mem.set(&terr.air_distances, INFINITY, size_of(terr.air_distances))
 		// Ensure that the distance from a land to itself is 0
 		terr.air_distances[territory_index] = 0
 		// Set initial distances based on adjacent lands
@@ -117,9 +117,9 @@ initialize_air_dist :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territory_
 		}
 	}
 	for mid_idx in 0 ..< TERRITORIES_COUNT {
-		mid_air_dist := territories[mid_idx].air_distances
+		mid_air_dist := &territories[mid_idx].air_distances
 		for start_idx in 0 ..< TERRITORIES_COUNT {
-			start_air_dist := territories[start_idx].air_distances
+			start_air_dist := &territories[start_idx].air_distances
 			for end_idx in 0 ..< TERRITORIES_COUNT {
 				new_dist := mid_air_dist[start_idx] + mid_air_dist[end_idx]
 				if new_dist < start_air_dist[end_idx] {
