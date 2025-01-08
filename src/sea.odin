@@ -10,6 +10,7 @@ MAX_SEA_TO_SEA_CONNECTIONS :: 7
 SEAS_COUNT :: len(SEAS_DATA)
 Seas :: [SEAS_COUNT]Sea
 CANALS_COUNT :: len(CANALS)
+//CANALS_COUNT :: 2
 CANAL_STATES :: 1 << CANALS_COUNT
 MAX_PATHS_TO_SEA :: 2
 SA_Adjacent_S2S :: sa.Small_Array(MAX_SEA_TO_SEA_CONNECTIONS, ^Sea)
@@ -25,6 +26,7 @@ Sea :: struct {
 	enemy_submarines_total: int,
 	enemy_blockade_total:   int,
 	allied_carriers:        int,
+	enemy_fighters_total:   int,
 	sea_index:              Sea_ID,
 	sea_path_blocked:       bool,
 	sub_path_blocked:       bool,
@@ -54,7 +56,7 @@ Sea_ID :: enum {
 
 SEAS_DATA :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
-CANALS :: [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
+CANALS := [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
 
 get_sea_id :: proc(air_idx: Air_ID) -> Sea_ID {
@@ -62,7 +64,7 @@ get_sea_id :: proc(air_idx: Air_ID) -> Sea_ID {
 	return Sea_ID(int(air_idx) - LANDS_COUNT)
 }
 
-get_sea::proc(gc: ^Game_Cache, air_idx: Air_ID) -> ^Sea {
+get_sea :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> ^Sea {
 	assert(int(air_idx) > LANDS_COUNT, "Invalid air index")
 	return &gc.seas[int(air_idx) - LANDS_COUNT]
 }
@@ -90,11 +92,15 @@ initialize_sea_connections :: proc(seas: ^Seas) -> (ok: bool) {
 			sa.append(&canal_path.adjacent_seas, &seas[sea1_idx])
 		}
 	}
-	for canal, canal_idx in CANALS {
-		for canal_path_idx in 0 ..< CANAL_STATES {
-			if (canal_path_idx & (1 << uint(canal_idx))) == 0 {
-				continue
-			}
+	// for canal, canal_idx in CANALS {
+	// if canal_idx not_in canals_open do continue
+	// if (canal_path_idx & (1 << uint(canal_idx))) == 0 {
+	// 	continue
+	// }
+	for canal_path_idx in 0 ..< CANAL_STATES {
+		canals_open := transmute(CANALS_OPEN)u8(canal_path_idx)
+		for canal_idx in canals_open {
+			canal := CANALS[canal_idx]
 			sea1_idx := get_sea_idx_from_string(canal.seas[0]) or_return
 			sea2_idx := get_sea_idx_from_string(canal.seas[1]) or_return
 			sa.append(&seas[sea1_idx].canal_paths[canal_path_idx].adjacent_seas, &seas[sea2_idx])

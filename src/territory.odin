@@ -16,7 +16,7 @@ Territory :: struct {
 	skipped_moves:              [TERRITORIES_COUNT]bool, // Maybe this should be a bitset at the gc level
 	skipped_buys:							 	[len(Buy_Action)]bool,
 	combat_status:              Combat_Status,
-	builds_left:                int,
+	//builds_left:                int,
 	land_within_6_moves:        SA_Land_Pointers,
 	land_within_5_moves:        SA_Land_Pointers,
 	land_within_4_moves:        SA_Land_Pointers,
@@ -31,7 +31,6 @@ Territory :: struct {
 	airs_6_moves_away:          SA_Territory_Pointers,
 	team_units:                 [TEAMS_COUNT]int,
 	territory_index:            Air_ID,
-	enemy_fighters_total:       int,
 	can_fighter_land_here:      bool, //bitset?
 	can_fighter_land_in_1_move: bool,
 	can_bomber_land_here:       bool,

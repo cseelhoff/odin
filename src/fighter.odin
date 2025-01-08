@@ -63,10 +63,12 @@ refresh_can_fighter_land_here :: proc(gc: ^Game_Cache) {
 		}
 		// if player owns a carrier, then landing area is 2 spaces away
 		if sea.active_ships[Active_Ship.CARRIER_UNMOVED] > 0 {
-			for adj_sea in sa.slice(&sea.canal_paths[gc.canal_state].adjacent_seas) {
+			// for adj_sea in sa.slice(&sea.canal_paths[gc.canal_state].adjacent_seas) {
+			for adj_sea in sa.slice(&sea.canal_paths[transmute(u8)gc.canals_open].adjacent_seas) {
 				fighter_can_land_here(adj_sea)
 			}
-			for sea_2_moves_away in sa.slice(&sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+			// for sea_2_moves_away in sa.slice(&sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+			for sea_2_moves_away in sa.slice(&sea.canal_paths[transmute(u8)gc.canals_open].seas_2_moves_away) {		
 				fighter_can_land_here(sea_2_moves_away.sea)
 			}
 		}
@@ -166,7 +168,10 @@ land_next_fighter_in_air :: proc(
 	dst_air := gc.territories[dst_air_idx]
 	move_single_plane(dst_air, Plane_After_Moves[plane], gc.cur_player, plane, src_air)
 	if carrier_now_empty(gc, dst_air_idx) {
-		valid_move_index := slice.linear_search(sa.slice(&gc.valid_moves), int(dst_air_idx)) or_return
+		valid_move_index := slice.linear_search(
+			sa.slice(&gc.valid_moves),
+			int(dst_air_idx),
+		) or_return
 		sa.unordered_remove(&gc.valid_moves, valid_move_index)
 	}
 	return true

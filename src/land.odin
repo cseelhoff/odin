@@ -28,6 +28,7 @@ Land :: struct {
 	factory_dmg:        int,
 	factory_prod:       int,
 	max_bombards:       int,
+	builds_left:        int,
 	lands_2_moves_away: sa.Small_Array(LANDS_COUNT, Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,

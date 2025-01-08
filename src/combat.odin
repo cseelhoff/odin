@@ -75,7 +75,9 @@ build_sea_retreat_options :: proc(gc: ^Game_Cache, src_sea: ^Sea) {
 		// otherwise I am possibly wasting transports
 		sa.push(&gc.valid_moves, int(src_sea.territory_index))
 	}
-	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+
+	//for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+	for dst_sea in sa.slice(&src_sea.canal_paths[transmute(u8)gc.canals_open].adjacent_seas) {
 		// todo only allow retreat to valid territories where attack originated
 		if dst_sea.enemy_blockade_total == 0 && dst_sea.combat_status == .NO_COMBAT {
 			sa.push(&gc.valid_moves, int(dst_sea.territory_index))

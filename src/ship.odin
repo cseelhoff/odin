@@ -26,13 +26,13 @@ BATTLESHIP_ATTACK :: 4
 Active_Ship_Attack := [?]int {
 	Active_Ship.BATTLESHIP_0_MOVES = BATTLESHIP_ATTACK,
 	Active_Ship.BS_DAMAGED_0_MOVES = BATTLESHIP_ATTACK,
-	Active_Ship.CRUISER_0_MOVES = CRUISER_ATTACK,
+	Active_Ship.CRUISER_0_MOVES    = CRUISER_ATTACK,
 }
 
 Ship_After_Bombard := [?]Active_Ship {
 	Active_Ship.BATTLESHIP_0_MOVES = .BATTLESHIP_BOMBARDED,
 	Active_Ship.BS_DAMAGED_0_MOVES = .BS_DAMAGED_BOMBARDED,
-	Active_Ship.CRUISER_0_MOVES = .CRUISER_BOMBARDED,
+	Active_Ship.CRUISER_0_MOVES    = .CRUISER_BOMBARDED,
 }
 
 DESTROYER_DEFENSE :: 2
@@ -89,10 +89,7 @@ Active_Ship :: enum {
 	BS_DAMAGED_BOMBARDED,
 }
 
-Attacker_Sea_Casualty_Order_1 := []Active_Ship {
-	.SUB_0_MOVES,
-	.DESTROYER_0_MOVES,
-}
+Attacker_Sea_Casualty_Order_1 := []Active_Ship{.SUB_0_MOVES, .DESTROYER_0_MOVES}
 
 Air_Casualty_Order_Fighters := []Active_Plane {
 	.FIGHTER_0_MOVES,
@@ -102,10 +99,7 @@ Air_Casualty_Order_Fighters := []Active_Plane {
 	.FIGHTER_4_MOVES,
 }
 
-Attacker_Sea_Casualty_Order_2 := []Active_Ship {
-	.CARRIER_0_MOVES,
-	.CRUISER_0_MOVES,
-}
+Attacker_Sea_Casualty_Order_2 := []Active_Ship{.CARRIER_0_MOVES, .CRUISER_0_MOVES}
 
 Air_Casualty_Order_Bombers := []Active_Plane {
 	.BOMBER_0_MOVES,
@@ -115,9 +109,7 @@ Air_Casualty_Order_Bombers := []Active_Plane {
 	.BOMBER_4_MOVES,
 	.BOMBER_5_MOVES,
 }
-Attacker_Sea_Casualty_Order_3 := []Active_Ship {
-	.BS_DAMAGED_BOMBARDED,
-}
+Attacker_Sea_Casualty_Order_3 := []Active_Ship{.BS_DAMAGED_BOMBARDED}
 
 Attacker_Sea_Casualty_Order_4 := []Active_Ship {
 	.TRANS_EMPTY_0_MOVES,
@@ -129,21 +121,11 @@ Attacker_Sea_Casualty_Order_4 := []Active_Ship {
 	.TRANS_1I_1T_0_MOVES,
 }
 
-Attacker_Land_Casualty_Order_1 := []Active_Army {
-	.INF_0_MOVES,
-	.ARTY_0_MOVES,
-	.TANK_0_MOVES,
-}
+Attacker_Land_Casualty_Order_1 := []Active_Army{.INF_0_MOVES, .ARTY_0_MOVES, .TANK_0_MOVES}
 
-Defender_Sub_Casualty := []Idle_Ship {
-	.SUB,
-}
+Defender_Sub_Casualty := []Idle_Ship{.SUB}
 
-Defender_Sea_Casualty_Order_1 := []Idle_Ship {
-	.DESTROYER,
-	.CARRIER,
-	.CRUISER,
-}
+Defender_Sea_Casualty_Order_1 := []Idle_Ship{.DESTROYER, .CARRIER, .CRUISER}
 
 Defender_Sea_Casualty_Order_2 := []Idle_Ship {
 	.BS_DAMAGED,
@@ -156,20 +138,13 @@ Defender_Sea_Casualty_Order_2 := []Idle_Ship {
 	.TRANS_1I_1T,
 }
 
-Defender_Land_Casualty_Order_1 := []Idle_Army {
-	.AAGUN,
-}
-Defender_Land_Casualty_Order_2 := []Idle_Army {
-	.INF,
-	.ARTY,
-	.TANK,
-}
+Defender_Land_Casualty_Order_1 := []Idle_Army{.AAGUN}
+Defender_Land_Casualty_Order_2 := []Idle_Army{.INF, .ARTY, .TANK}
 Bombard_Ships := []Active_Ship {
 	Active_Ship.BATTLESHIP_0_MOVES,
 	Active_Ship.BS_DAMAGED_0_MOVES,
 	Active_Ship.CRUISER_0_MOVES,
 }
-
 
 
 Ship_Names := [?]string {
@@ -354,13 +329,15 @@ skip_ship :: proc(src_sea: ^Sea, dst_sea: ^Sea, ship: Active_Ship) -> bool {
 }
 
 add_valid_ship_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) {
-	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+	// for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+	for dst_sea in sa.slice(&src_sea.canal_paths[transmute(u8)gc.canals_open].adjacent_seas) {
 		if src_sea.skipped_moves[dst_sea.territory_index] {
 			continue
 		}
 		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 	}
-	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+	// for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[transmute(u8)gc.canals_open].seas_2_moves_away) {
 		if src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] {
 			continue
 		}

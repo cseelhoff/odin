@@ -9,6 +9,7 @@ Territory_Pointers :: [TERRITORIES_COUNT]^Territory
 SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory)
 SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land)
 SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
+CANALS_OPEN :: bit_set[0..<CANALS_COUNT;u8]
 
 Game_Cache :: struct {
 	//state:             Game_State,
@@ -21,7 +22,8 @@ Game_Cache :: struct {
 	unlucky_player:           ^Player,
 	cur_player:               ^Player,
 	seed:                     int,
-	canal_state:              int,
+	//canal_state:              int, //array of bools / bit_set is probably best
+	canals_open:							CANALS_OPEN, //[CANALS_COUNT]bool,
 	step_id:                  int,
 	answers_remaining:        int,
 	selected_action:          int,
@@ -67,6 +69,7 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 		gc.lands[i].max_bombards = land.max_bombards
 		gc.lands[i].idle_armies = land.idle_armies
 		gc.lands[i].active_armies = land.active_armies
+		gc.lands[i].builds_left = land.builds_left
 		load_territory_from_state(&gc.lands[i].territory, &land.territory_state)
 	}
 	for &sea, i in gs.sea_state {
@@ -78,7 +81,7 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 
 load_territory_from_state :: proc(territory: ^Territory, ts: ^Territory_State) {
 	territory.combat_status = ts.combat_status
-	territory.builds_left = ts.builds_left
+	//territory.builds_left = ts.builds_left
 	territory.skipped_moves = ts.skipped_moves
 	territory.active_planes = ts.active_planes
 	territory.idle_planes = ts.idle_planes

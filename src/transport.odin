@@ -124,7 +124,8 @@ stage_trans_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (o
 stage_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
 	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
 	dst_sea_idx := get_sea_id(dst_air_idx)
-	sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
+	// sea_distance := src_sea.canal_paths[gc.canal_state].sea_distance[dst_sea_idx]
+	sea_distance := src_sea.canal_paths[transmute(u8)gc.canals_open].sea_distance[dst_sea_idx]
 	dst_sea := &gc.seas[dst_sea_idx]
 	if skip_ship(src_sea, dst_sea, ship) do return true
 	if dst_sea.combat_status == .PRE_COMBAT {
@@ -183,7 +184,8 @@ move_next_trans_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship
 }
 
 add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: int) {
-	for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+	// for dst_sea in sa.slice(&src_sea.canal_paths[gc.canal_state].adjacent_seas) {
+	for dst_sea in sa.slice(&src_sea.canal_paths[transmute(u8)gc.canals_open].adjacent_seas) {
 		if src_sea.skipped_moves[dst_sea.territory_index] ||
 		   dst_sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
 			   dst_sea.combat_status != .PRE_COMBAT { 	// transport needs escort
@@ -192,7 +194,10 @@ add_valid_transport_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, max_distance: 
 		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 	}
 	if max_distance == 1 do return
-	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+	// for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
+	for &dst_sea_2_away in sa.slice(
+		&src_sea.canal_paths[transmute(u8)gc.canals_open].seas_2_moves_away,
+	) {
 		if (src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] ||
 			   dst_sea_2_away.sea.team_units[gc.cur_player.team.enemy_team.index] > 0 &&
 				   dst_sea_2_away.sea.combat_status != .PRE_COMBAT) { 	// transport needs escort
