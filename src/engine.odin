@@ -40,23 +40,17 @@ add_move_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^
 	}
 }
 
-add_buy_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, action: Buy_Action) {
-	if !src_air.skipped_buys[int(action)] {
-		sa.push(&gc.valid_moves, buy_to_action_idx(action))
-	}
-}
-
 update_move_history :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air_idx: Air_ID) {
 	// get a list of newly skipped valid_actions
 	assert(gc.valid_moves.len > 0)
 	valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
 	for {
-		if (Air_ID(valid_action) == dst_air_idx) do break
+		if (Air_ID(valid_action) == dst_air_idx) do return
 		src_air.skipped_moves[valid_action] = true
+		gc.clear_needed = true
 		//apply_skip(gc, src_air, gc.territories[valid_action])
 		valid_action = sa.pop_back(&gc.valid_moves)
 	}
-	gc.clear_needed = true
 }
 
 // apply_skip :: proc(gc: ^Game_Cache, src_air: ^Territory, dst_air: ^Territory) {
@@ -71,6 +65,7 @@ clear_move_history :: proc(gc: ^Game_Cache) {
 	for territory in gc.territories {
 		mem.zero_slice(territory.skipped_moves[:])
 	}
+	gc.clear_needed = false
 }
 
 reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory) { 	// -> (dst_air_idx: int) {

@@ -1,5 +1,8 @@
 package oaaa
 import sa "core:container/small_array"
+import "core:fmt"
+import "core:mem"
+
 
 Buy_Action :: enum {
 	SKIP_BUY,
@@ -27,6 +30,18 @@ Valid_Sea_Buys := [?]Buy_Action {
 	.BUY_BATTLESHIP,
 }
 
+Valid_Air_Buys := [?]Buy_Action {
+	.BUY_FIGHTER,
+  .BUY_BOMBER,
+}
+
+Valid_Land_Buys := [?]Buy_Action {
+	.BUY_INF,
+  .BUY_ARTY,
+  .BUY_TANK,
+  .BUY_AAGUN,
+}
+
 Buy_Active_Ship := [?]Active_Ship {
 	Buy_Action.BUY_TRANS      = .TRANS_EMPTY_0_MOVES,
 	Buy_Action.BUY_SUB        = .SUB_0_MOVES,
@@ -34,6 +49,18 @@ Buy_Active_Ship := [?]Active_Ship {
 	Buy_Action.BUY_CARRIER    = .CARRIER_0_MOVES,
 	Buy_Action.BUY_CRUISER    = .CRUISER_0_MOVES,
 	Buy_Action.BUY_BATTLESHIP = .BATTLESHIP_0_MOVES,
+}
+
+Buy_Active_Plane := [?]Active_Plane {
+  Buy_Action.BUY_FIGHTER    = .FIGHTER_0_MOVES,
+  Buy_Action.BUY_BOMBER     = .BOMBER_0_MOVES,
+}
+
+Buy_Active_Army := [?]Active_Army {
+  Buy_Action.BUY_INF        = .INF_0_MOVES,
+  Buy_Action.BUY_ARTY       = .ARTY_0_MOVES,
+  Buy_Action.BUY_TANK       = .TANK_0_MOVES,
+  Buy_Action.BUY_AAGUN      = .AAGUN_0_MOVES,
 }
 
 Cost_Buy := [?]int {
@@ -81,145 +108,115 @@ get_buy_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (action: Buy_Acti
 		}
 		action = Buy_Action(get_ai_input(gc))
 	}
-  update_buy_history(gc, src_air, action)
+	update_buy_history(gc, src_air, action)
 	return action, true
 }
 
 update_buy_history :: proc(gc: ^Game_Cache, src_air: ^Territory, action: Buy_Action) {
-  //todo
+	assert(gc.valid_moves.len > 0)
+	valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
+	for {
+		if (Buy_Action(valid_action) == action) do return
+		src_air.skipped_buys[valid_action] = true
+		gc.clear_needed = true
+		valid_action = sa.pop_back(&gc.valid_moves)
+	}
 }
 
 buy_to_action_idx :: proc(action: Buy_Action) -> int {
 	return int(action) + TERRITORIES_COUNT
 }
 
-buy_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	gc.valid_moves.data[0] = buy_to_action_idx(.SKIP_BUY)
-	for land in sa.slice(&gc.cur_player.factory_locations) {
-		if land.builds_left == 0 do continue
-		repair_cost := 0
-		// buy sea units
-		for dst_sea in sa.slice(&land.adjacent_seas) {
-			for (land.builds_left > 0) {
-				if gc.cur_player.money < MIN_SHIP_COST do break
-				//units_built := land.factory_prod - land.builds_left
-				repair_cost = max(0, 1 + land.factory_dmg - land.builds_left)
-				gc.valid_moves.len = 1
-				if gc.cur_player.money >= Cost_Buy[Buy_Action.BUY_FIGHTER] + repair_cost &&
-				   is_carrier_available(gc, dst_sea) {
-					add_buy_if_not_skipped(gc, dst_sea, Buy_Action.BUY_FIGHTER)
-				}
-				for buy_ship in Valid_Sea_Buys {
-					if gc.cur_player.money < Cost_Buy[buy_ship] + repair_cost do continue
-					add_buy_if_not_skipped(gc, dst_sea, buy_ship)
-				}
-				action := get_buy_input(gc, dst_sea) or_return
+add_buy_if_not_skipped :: proc(gc: ^Game_Cache, src_air: ^Territory, action: Buy_Action) {
+	if !src_air.skipped_buys[int(action)] {
+		sa.push(&gc.valid_moves, buy_to_action_idx(action))
+	}
+}
+
+buy_sea_units :: proc(gc: ^Game_Cache, land: ^Land) -> (ok: bool) {
+	for dst_sea in sa.slice(&land.adjacent_seas) {
+		for (land.builds_left > 0 && !dst_sea.skipped_buys[Buy_Action.SKIP_BUY]) {
+			repair_cost := max(0, 1 + land.factory_dmg - land.builds_left)
+			gc.valid_moves.len = 1
+			if gc.cur_player.money >= Cost_Buy[Buy_Action.BUY_FIGHTER] + repair_cost &&
+			   is_carrier_available(gc, dst_sea) {
+				add_buy_if_not_skipped(gc, dst_sea, Buy_Action.BUY_FIGHTER)
 			}
+			for buy_ship in Valid_Sea_Buys {
+				if gc.cur_player.money < Cost_Buy[buy_ship] + repair_cost do continue
+				add_buy_if_not_skipped(gc, dst_sea, buy_ship)
+			}
+			action := get_buy_input(gc, dst_sea) or_return
+			if action == .SKIP_BUY {
+        dst_sea.skipped_buys[Buy_Action.SKIP_BUY] = true
+        break
+      }
+			land.builds_left -= 1
+			land.factory_dmg -= repair_cost
+			gc.cur_player.money -= Cost_Buy[action] + repair_cost
+			if action == .BUY_FIGHTER {
+				dst_sea.active_planes[Active_Plane.FIGHTER_0_MOVES] += 1
+				dst_sea.idle_planes[gc.cur_player.index][Idle_Plane.FIGHTER] += 1
+			} else {
+				ship := Buy_Active_Ship[action]
+				dst_sea.active_ships[ship] += 1
+				dst_sea.idle_ships[gc.cur_player.index][Active_Ship_To_Idle[ship]] += 1
+			}
+			dst_sea.team_units[gc.cur_player.team.index] += 1
 		}
 	}
 	return true
 }
-// 				if (unit_type == FIGHTERS) {
-// 					uint total_fighters = 0;
-// 					for (uint player_idx = 0; player_idx < PLAYERS_COUNT; player_idx++) {
-// 						total_fighters += total_player_sea_unit_types[player_idx][dst_sea][FIGHTERS];
-// 					}
-// 					if (allied_carriers[dst_sea] * 2 <= total_fighters) {
-// 						continue;
-// 					}
-// 				}
-// 				valid_moves[valid_moves_count++] = unit_type;
-// 			}
-// 			if (valid_moves_count == 1) {
-// 				state.builds_left.at(dst_air) = 0;
-// 				break;
-// 			}
-// 			if (answers_remaining == 0) {
-// 				return true;
-// 			}
-// 			units_to_process = true;
-// 			uint purchase = get_user_purchase_input(dst_air);
-// 			if (purchase == SEA_UNIT_TYPES_COUNT) { // pass all units
-// 				state.builds_left[dst_air] = 0;
-// 				break;
-// 			}
-// 			for (uint sea_idx2 = sea_idx; sea_idx2 < LAND_TO_SEA_COUNT[dst_land]; sea_idx2++) {
-// 				state.builds_left.at(LAND_TO_SEA_CONN[dst_land][sea_idx2] + LANDS_COUNT)--;
-// 			}
-// 			state.builds_left.at(dst_land)--;
-// 			*factory_dmg[dst_land] -= repair_cost;
-// 			state.money[0] -= COST_UNIT_SEA[purchase] + repair_cost;
-// 			sea_units_state[dst_sea][purchase][0]++;
-// 			total_player_sea_units[0][dst_sea]++;
-// 			current_player_sea_unit_types[dst_sea][purchase]++;
-// 			if (purchase > last_purchased) {
-// 				for (uint unit_type2 = last_purchased; unit_type2 < purchase; unit_type2++) {
-// 					state.skipped_moves[0][unit_type2].bit = true;
-// 				}
 
-// 				last_purchased = purchase;
-// 			}
-// 		}
-// 		if (units_to_process) {
-// 			clear_move_history();
-// 		}
-// 	}
-// 	// buy land units
-// 	valid_moves[0] = LAND_UNIT_TYPES_COUNT; // pass all units
-// 	uint last_purchased = 0;
-// 	units_to_process = false;
-// 	while (state.builds_left.at(dst_land) > 0) {
-// 		if (state.money[0] < INFANTRY_COST) {
-// 			state.builds_left.at(dst_land) = 0;
-// 			break;
-// 		}
-// 		uint units_built = *factory_max[dst_land] - state.builds_left.at(dst_land);
-// 		if (*factory_max[dst_land] < 1 + units_built + *factory_dmg[dst_land]) {
-// 			repair_cost = 1 + units_built + *factory_dmg[dst_land] - *factory_max[dst_land];
-// 		}
-// 		// add all units that can be bought
-// 		valid_moves_count = 1;
-// 		for (uint unit_type1 = 0; unit_type1 <= LAND_UNIT_TYPES_COUNT - 1; unit_type1++) {
-// 			uint unit_type = LAND_UNIT_TYPES_COUNT - 1 - unit_type1;
-// 			// if (unit_type < last_purchased)
-// 			//   break;
-// 			if (state.skipped_moves[0][unit_type].bit) {
-// 				last_purchased = unit_type;
-// 				break;
-// 			}
-// 			if (state.money[0] < COST_UNIT_LAND[unit_type] + repair_cost) {
-// 				continue;
-// 			}
-// 			valid_moves[valid_moves_count++] = unit_type;
-// 		}
-// 		if (valid_moves_count == 1) {
-// 			state.builds_left.at(dst_land) = 0;
-// 			break;
-// 		}
-// 		if (answers_remaining == 0) {
-// 			return true;
-// 		}
-// 		units_to_process = true;
-// 		uint purchase = get_user_purchase_input(dst_land);
-// 		if (purchase == LAND_UNIT_TYPES_COUNT) { // pass all units
-// 			state.builds_left.at(dst_land) = 0;
-// 			break;
-// 		}
-// 		state.builds_left.at(dst_land)--;
-// 		*factory_dmg[dst_land] -= repair_cost;
-// 		state.money[0] -= COST_UNIT_LAND[purchase] + repair_cost;
-// 		land_units_state[dst_land][purchase][0]++;
-// 		total_player_land_units[0][dst_land]++;
-// 		total_player_land_unit_types[0][dst_land][purchase]++;
-// 		if (purchase > last_purchased) {
-// 			for (uint unit_type2 = last_purchased; unit_type2 < purchase; unit_type2++) {
-// 				state.skipped_moves[0][unit_type2].bit = true;
-// 			}
-// 		}
-// 		last_purchased = purchase;
-// 	}
-// 	if (units_to_process) {
-// 		clear_move_history();
-// 	}
-// }
-// return false;
+clear_buy_history :: proc(gc: ^Game_Cache, land: ^Land) {
+  for sea in sa.slice(&land.adjacent_seas) {
+    mem.zero_slice(sea.skipped_buys[:])
+  }
+  gc.clear_needed = false
+}
+
+
+buy_land_units :: proc(gc: ^Game_Cache, land: ^Land) -> (ok: bool) {
+	for (land.builds_left > 0) {
+    repair_cost := max(0, 1 + land.factory_dmg - land.builds_left)
+    gc.valid_moves.len = 1
+    for buy_plane in Valid_Air_Buys {
+      if gc.cur_player.money < Cost_Buy[buy_plane] + repair_cost do continue
+      add_buy_if_not_skipped(gc, land, buy_plane)
+    }
+    for buy_army in Valid_Land_Buys {
+      if gc.cur_player.money < Cost_Buy[buy_army] + repair_cost do continue
+      add_buy_if_not_skipped(gc, land, buy_army)
+    }
+    action := get_buy_input(gc, land) or_return
+    if action == .SKIP_BUY {
+      land.builds_left = 0
+      break
+    }
+    land.builds_left -= 1
+    land.factory_dmg -= repair_cost
+    gc.cur_player.money -= Cost_Buy[action] + repair_cost
+    if action == .BUY_FIGHTER || action == .BUY_BOMBER {
+      plane := Buy_Active_Plane[action]
+      land.active_planes[plane] += 1
+      land.idle_planes[gc.cur_player.index][Active_Plane_To_Idle[plane]] += 1
+    } else {
+      army := Buy_Active_Army[action]
+      land.active_armies[army] += 1
+      land.idle_armies[gc.cur_player.index][Active_Army_To_Idle[army]] += 1
+    }
+    land.team_units[gc.cur_player.team.index] += 1
+	}
+	return true
+}
+
+buy_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	gc.valid_moves.data[0] = buy_to_action_idx(.SKIP_BUY)
+	for land in sa.slice(&gc.cur_player.factory_locations) {
+		if land.builds_left == 0 do continue
+    if gc.clear_needed do clear_buy_history(gc, land)
+		buy_sea_units(gc, land) or_return
+		buy_land_units(gc, land) or_return
+	}
+	return true
+}
