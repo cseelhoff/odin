@@ -47,7 +47,7 @@ refresh_can_fighter_land_here :: proc(gc: ^Game_Cache) {
 	}
 	for &land in gc.lands {
 		// is allied owned and not recently conquered?
-		if gc.cur_player.team == land.owner.team && land.combat_status == Combat_Status.NO_COMBAT {
+		if gc.cur_player.team == land.owner.team && land.combat_status == .NO_COMBAT {
 			fighter_can_land_here(&land.territory)
 		}
 		// check for possiblity to build carrier under fighter

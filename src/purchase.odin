@@ -10,7 +10,6 @@ Buy_Action :: enum {
 	BUY_ARTY,
 	BUY_TANK,
 	BUY_AAGUN,
-	BUY_FACTORY,
 	BUY_FIGHTER,
 	BUY_BOMBER,
 	BUY_TRANS,
@@ -79,6 +78,8 @@ Cost_Buy := [?]int {
 	Buy_Action.BUY_BATTLESHIP = 20,
 }
 
+FACTORY_COST :: 15
+
 Buy_Names := [?]string {
 	Buy_Action.SKIP_BUY       = "SKIP_BUY",
 	Buy_Action.BUY_INF        = "BUY_INF",
@@ -93,6 +94,42 @@ Buy_Names := [?]string {
 	Buy_Action.BUY_CARRIER    = "BUY_CARRIER",
 	Buy_Action.BUY_CRUISER    = "BUY_CRUISER",
 	Buy_Action.BUY_BATTLESHIP = "BUY_BATTLESHIP",
+}
+
+get_factory_buy :: proc(
+	gc: ^Game_Cache
+) -> (
+	action: int,
+	ok: bool,
+) {
+	action = gc.valid_moves.data[0]
+	if gc.valid_moves.len > 1 {
+		if gc.answers_remaining == 0 do return action, false
+		if PLAYER_DATA[gc.cur_player.index].is_human {
+			fmt.println("Buying Factory For: ")
+			for valid_move in sa.slice(&gc.valid_moves) {
+        if valid_move > TERRITORIES_COUNT {
+          fmt.print(int(valid_move), "=Skip", ", ")
+        } else {
+				  fmt.print(int(valid_move), gc.territories[valid_move].name, ", ")
+        }
+			}
+			action = get_user_input(gc)
+		}
+		action = get_ai_input(gc)
+	}
+	update_factory_history(gc, action)
+	return action, true
+}
+
+update_factory_history :: proc (gc: ^Game_Cache, action: int) {
+  assert(gc.valid_moves.len > 0)
+  valid_action := gc.valid_moves.data[gc.valid_moves.len - 1]
+  for {
+    if (valid_action == action) do return
+    gc.territories[valid_action].skipped_moves[valid_action] = true
+    valid_action = sa.pop_back(&gc.valid_moves)
+  }
 }
 
 get_buy_input :: proc(gc: ^Game_Cache, src_air: ^Territory) -> (action: Buy_Action, ok: bool) {
@@ -139,7 +176,7 @@ buy_sea_units :: proc(gc: ^Game_Cache, land: ^Land) -> (ok: bool) {
 			repair_cost := max(0, 1 + land.factory_dmg - land.builds_left)
 			gc.valid_moves.len = 1
 			if gc.cur_player.money >= Cost_Buy[Buy_Action.BUY_FIGHTER] + repair_cost &&
-			   is_carrier_available(gc, dst_sea) {
+      dst_sea.can_fighter_land_here {
 				add_buy_if_not_skipped(gc, dst_sea, Buy_Action.BUY_FIGHTER)
 			}
 			for buy_ship in Valid_Sea_Buys {
@@ -157,10 +194,12 @@ buy_sea_units :: proc(gc: ^Game_Cache, land: ^Land) -> (ok: bool) {
 			if action == .BUY_FIGHTER {
 				dst_sea.active_planes[Active_Plane.FIGHTER_0_MOVES] += 1
 				dst_sea.idle_planes[gc.cur_player.index][Idle_Plane.FIGHTER] += 1
+        dst_sea.can_fighter_land_here = is_carrier_available(gc, dst_sea)
 			} else {
 				ship := Buy_Active_Ship[action]
 				dst_sea.active_ships[ship] += 1
 				dst_sea.idle_ships[gc.cur_player.index][Active_Ship_To_Idle[ship]] += 1
+        if ship == .CARRIER_0_MOVES do dst_sea.can_fighter_land_here = true
 			}
 			dst_sea.team_units[gc.cur_player.team.index] += 1
 		}
@@ -174,7 +213,6 @@ clear_buy_history :: proc(gc: ^Game_Cache, land: ^Land) {
   }
   gc.clear_needed = false
 }
-
 
 buy_land_units :: proc(gc: ^Game_Cache, land: ^Land) -> (ok: bool) {
 	for (land.builds_left > 0) {

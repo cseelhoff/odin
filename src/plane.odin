@@ -182,11 +182,6 @@ refresh_plane_can_land_here :: proc(gc: ^Game_Cache, plane: Active_Plane) {
 	}
 }
 
-crash_air_units :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	fmt.eprintln("Error: crash_air_units not implemented")
-	return false
-}
-
 crash_unlandable_fighters :: proc(gc: ^Game_Cache, src_air: ^Territory, plane: Active_Plane) -> bool {
 	if gc.valid_moves.len > 0 do return false
 	planes_count := src_air.active_planes[plane]

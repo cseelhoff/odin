@@ -1,5 +1,6 @@
 package oaaa
 import sa "core:container/small_array"
+import "core:fmt"
 
 allied_fighters_exist :: proc(gc: ^Game_Cache, territory: ^Territory) -> bool {
 	for player in sa.slice(&gc.cur_player.team.players) {
@@ -104,7 +105,7 @@ sea_retreat :: proc(gc: ^Game_Cache, src_sea: ^Sea, dst_air_idx: Air_ID) -> bool
 			src_sea.team_units[player.index] -= number_of_ships
 		}
 	}
-	src_sea.combat_status = .NO_COMBAT
+	src_sea.combat_status = .POST_COMBAT
 	return true
 }
 
@@ -160,7 +161,7 @@ destroy_vulnerable_transports :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 		src_sea.idle_ships[player_idx][Idle_Ship.TRANS_1I_1T] = 0
 		src_sea.active_ships[Active_Ship.TRANS_1I_1T_0_MOVES] = 0
 	}
-	src_sea.combat_status = .NO_COMBAT
+	src_sea.combat_status = .POST_COMBAT
 	return true
 }
 
@@ -195,7 +196,7 @@ destroy_defender_transports :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 			src_sea.idle_ships[enemy_player_idx][Idle_Ship.TRANS_1I_1T] = 0
 		}
 	}
-	src_sea.combat_status = .NO_COMBAT
+	src_sea.combat_status = .POST_COMBAT
 	return true
 }
 DICE_SIDES :: 6
@@ -230,13 +231,13 @@ get_defender_hits :: proc(gc: ^Game_Cache, defender_damage: int) -> (defender_hi
 
 no_allied_units_remain :: proc(gc: ^Game_Cache, src_sea: ^Sea) -> bool {
 	if src_sea.team_units[gc.cur_player.team.index] > 0 do return false
-	src_sea.combat_status = .NO_COMBAT
+	src_sea.combat_status = .POST_COMBAT
 	return true
 }
 
 resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for &src_sea in gc.seas {
-		if src_sea.combat_status == .NO_COMBAT do continue
+		if src_sea.combat_status == .NO_COMBAT || src_sea.combat_status == .POST_COMBAT do continue
 		if destroy_defender_transports(gc, &src_sea) do continue
 		disable_bombardment(gc, &src_sea)
 		for {
@@ -360,7 +361,7 @@ destroy_undefended_aaguns :: proc(gc: ^Game_Cache, src_land: ^Land) {
 MAX_COMBAT_ROUNDS :: 100
 resolve_land_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	for &src_land in gc.lands {
-		if src_land.combat_status == .NO_COMBAT do continue
+		if src_land.combat_status == .NO_COMBAT || src_land.combat_status == .POST_COMBAT do continue
 		if no_attackers_remain(gc, &src_land) do continue
 		if src_land.combat_status == .PRE_COMBAT {
 			if strategic_bombing(gc, &src_land) do continue
@@ -393,7 +394,7 @@ resolve_land_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 
 no_attackers_remain :: proc(gc: ^Game_Cache, src_land: ^Land) -> bool {
 	if src_land.team_units[gc.cur_player.team.index] == 0 {
-		src_land.combat_status = .NO_COMBAT
+		src_land.combat_status = .POST_COMBAT
 		return true
 	}
 	return false
@@ -404,7 +405,7 @@ strategic_bombing :: proc(gc: ^Game_Cache, src_land: ^Land) -> bool {
 	if bombers == 0 || src_land.team_units[gc.cur_player.team.index] > bombers {
 		return false
 	}
-	src_land.combat_status = .NO_COMBAT
+	src_land.combat_status = .POST_COMBAT
 	// if src_land.factory_dmg == src_land.factory_prod do return true
 	defender_hits := get_defender_hits(gc, bombers)
 	for (defender_hits > 0) {
@@ -414,10 +415,7 @@ strategic_bombing :: proc(gc: ^Game_Cache, src_land: ^Land) -> bool {
 	}
 	attacker_damage := src_land.idle_planes[gc.cur_player.index][Idle_Plane.BOMBER] * 21
 	attacker_hits := get_attacker_hits(gc, attacker_damage)
-	src_land.factory_dmg = max(
-		src_land.factory_dmg + attacker_hits,
-		src_land.factory_prod * 2,
-	)
+	src_land.factory_dmg = max(src_land.factory_dmg + attacker_hits, src_land.factory_prod * 2)
 	return true
 }
 
@@ -433,7 +431,7 @@ retreat_land_units :: proc(gc: ^Game_Cache, src_land: ^Land, dst_air_idx: Air_ID
 		src_land.idle_armies[gc.cur_player.index][Active_Army_To_Idle[army]] = 0
 		src_land.team_units[gc.cur_player.team.index] -= number_of_armies
 	}
-	src_land.combat_status = .NO_COMBAT
+	src_land.combat_status = .POST_COMBAT
 	return true
 }
 

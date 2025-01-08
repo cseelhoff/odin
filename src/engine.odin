@@ -26,9 +26,9 @@ play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	land_fighter_units(gc) or_return
 	land_bomber_units(gc) or_return
 	buy_units(gc) or_return
-	crash_air_units(gc) or_return
-	reset_units_fully(gc) or_return
+	//crash_air_units(gc) or_return
 	buy_factory(gc) or_return
+	reset_units_fully(gc) or_return
 	collect_money(gc) or_return
 	rotate_turns(gc) or_return
 	return true
@@ -73,10 +73,31 @@ reset_valid_moves :: proc(gc: ^Game_Cache, territory: ^Territory) { 	// -> (dst_
 	gc.valid_moves.data[0] = int(territory.territory_index)
 }
 
-reset_units_fully :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
-}
 buy_factory :: proc(gc: ^Game_Cache) -> (ok: bool) {
+	if gc.cur_player.money < FACTORY_COST do return true
+	gc.valid_moves.len = 1
+	gc.valid_moves.data[0] = buy_to_action_idx(.SKIP_BUY)
+	for land in gc.lands {
+		if land.owner != gc.cur_player ||
+		   land.factory_prod > 0 ||
+			 land.combat_status != .NO_COMBAT ||
+		   land.skipped_moves[land.territory_index] {
+			continue
+		}
+		sa.push(&gc.valid_moves, int(land.territory_index))
+	}
+	for (gc.cur_player.money < FACTORY_COST) {
+		factory_land_idx := get_factory_buy(gc) or_return
+		if factory_land_idx == buy_to_action_idx(.SKIP_BUY) do return true
+		gc.cur_player.money -= FACTORY_COST
+		factory_land := &gc.lands[factory_land_idx]
+		factory_land.factory_prod = factory_land.value
+		sa.push(&gc.cur_player.factory_locations, factory_land)
+	}
+	return true
+}
+
+reset_units_fully :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return false
 }
 collect_money :: proc(gc: ^Game_Cache) -> (ok: bool) {

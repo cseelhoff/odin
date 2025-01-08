@@ -40,4 +40,5 @@ Combat_Status :: enum {
 	NO_COMBAT,
 	MID_COMBAT,
 	PRE_COMBAT,
+	POST_COMBAT,
 }
