@@ -9,6 +9,11 @@ Idle_Plane :: enum {
 	BOMBER,
 }
 
+Idle_Plane_Names := [?]string {
+	Idle_Plane.FIGHTER = "FIGHTER",
+	Idle_Plane.BOMBER  = "BOMBER",
+}
+
 FIGHTER_ATTACK :: 3
 BOMBER_ATTACK :: 4
 
@@ -47,7 +52,7 @@ Active_Plane_To_Idle := [?]Idle_Plane {
 	Active_Plane.BOMBER_0_MOVES  = .BOMBER,
 }
 
-Plane_Names := [?]string {
+Active_Plane_Names := [?]string {
 	Active_Plane.FIGHTER_UNMOVED = "FIGHTER_UNMOVED",
 	Active_Plane.FIGHTER_4_MOVES = "FIGHTER_4_MOVES",
 	Active_Plane.FIGHTER_3_MOVES = "FIGHTER_3_MOVES",
@@ -116,7 +121,7 @@ move_next_plane_in_air :: proc(
 ) -> (
 	ok: bool,
 ) {
-	dst_air_idx := get_move_input(gc, Plane_Names[plane], src_air) or_return
+	dst_air_idx := get_move_input(gc, Active_Plane_Names[plane], src_air) or_return
 	dst_air := gc.territories[dst_air_idx]
 	if skip_plane(src_air, dst_air, plane, gc.cur_player.team.enemy_team.index) do return true
 	plane_after_move := plane_enemy_checks(gc, src_air, dst_air, plane)

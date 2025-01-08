@@ -60,12 +60,12 @@ CANALS := [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
 
 get_sea_id :: proc(air_idx: Air_ID) -> Sea_ID {
-	assert(int(air_idx) > LANDS_COUNT, "Invalid air index")
+	assert(int(air_idx) >= LANDS_COUNT, "Invalid air index")
 	return Sea_ID(int(air_idx) - LANDS_COUNT)
 }
 
 get_sea :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> ^Sea {
-	assert(int(air_idx) > LANDS_COUNT, "Invalid air index")
+	assert(int(air_idx) >= LANDS_COUNT, "Invalid air index")
 	return &gc.seas[int(air_idx) - LANDS_COUNT]
 }
 

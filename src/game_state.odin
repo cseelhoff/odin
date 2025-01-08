@@ -5,11 +5,11 @@ Idle_Army_For_Player :: [len(Idle_Army)]int
 Idle_Sea_For_Player :: [len(Idle_Ship)]int
 
 Game_State :: struct {
-	cur_player: int,
-	seed:       int,
-	money:      [PLAYERS_COUNT]int,
-	land_state: #soa[LANDS_COUNT]Land_State,
-	sea_state:  #soa[SEAS_COUNT]Sea_State,
+	cur_player:  int,
+	seed:        int,
+	money:       [PLAYERS_COUNT]int,
+	land_states: [LANDS_COUNT]Land_State,
+	sea_states:  [SEAS_COUNT]Sea_State,
 }
 
 Territory_State :: struct {
@@ -25,8 +25,8 @@ Land_State :: struct {
 	idle_armies:           [PLAYERS_COUNT]Idle_Army_For_Player,
 	active_armies:         [len(Active_Army)]int,
 	owner:                 int,
-	factory_dmg:        int,
-	factory_prod:    int,
+	factory_dmg:           int,
+	factory_prod:          int,
 	max_bombards:          int,
 }
 
@@ -41,4 +41,21 @@ Combat_Status :: enum {
 	MID_COMBAT,
 	PRE_COMBAT,
 	POST_COMBAT,
+}
+
+load_default_game_state :: proc(gs: ^Game_State) -> (ok: bool) {
+	for &money in gs.money {
+		money = 20
+	}
+	factory_locations :: [?]Land_ID{.Washington, .London, .Berlin, .Moscow, .Tokyo}
+	for land in factory_locations {
+		gs.land_states[land].factory_prod = LANDS_DATA[land].value
+	}
+	for &land, land_idx in gs.land_states {
+		land.owner = get_player_idx_from_string(LANDS_DATA[land_idx].owner) or_return
+		if land.owner == gs.cur_player {
+			land.builds_left = land.factory_prod
+		}
+	}
+	return true
 }

@@ -270,7 +270,7 @@ resolve_sea_battles :: proc(gc: ^Game_Cache) -> (ok: bool) {
 			if destroy_defender_transports(gc, &src_sea) do break
 		}
 	}
-	return false
+	return true
 }
 
 flag_for_enemy_combat :: proc(dst_air: ^Territory, enemy_team_idx: Team_ID) -> bool {
@@ -422,7 +422,7 @@ strategic_bombing :: proc(gc: ^Game_Cache, src_land: ^Land) -> bool {
 }
 
 retreat_land_units :: proc(gc: ^Game_Cache, src_land: ^Land, dst_air_idx: Air_ID) -> bool {
-	dst_land := get_land(gc, dst_air_idx) or_return
+	dst_land := get_land(gc, dst_air_idx) 
 	if dst_land == src_land do return false
 	for army in Active_Army {
 		number_of_armies := src_land.active_armies[army]

@@ -16,16 +16,18 @@ Player_Data :: struct {
 
 PLAYER_DATA := [?]Player_Data {
 	{team = "Allies", name = "Rus", color = "\033[1;31m", capital = "Moscow", is_human = true},
-	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin"},
-	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London"},
-	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo"},
-	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington"},
+	{team = "Axis", name = "Ger", color = "\033[1;34m", capital = "Berlin", is_human = true},
+	{team = "Allies", name = "Eng", color = "\033[1;95m", capital = "London", is_human = true},
+	{team = "Axis", name = "Jap", color = "\033[1;33m", capital = "Tokyo", is_human = true},
+	{team = "Allies", name = "USA", color = "\033[1;32m", capital = "Washington", is_human = true},
 }
+
+DEF_COLOR :: "\033[1;0m"
 
 Players :: [PLAYERS_COUNT]Player
 Player :: struct {
 	factory_locations:  sa.Small_Array(LANDS_COUNT, ^Land),
-	captial:            ^Land,
+	capital:            ^Land,
 	team:               ^Team,
 	money:              int,
 	income_per_turn:    int,
@@ -89,4 +91,12 @@ initialize_teams :: proc(teams: ^Teams, players: ^Players) {
 			}
 		}
 	}
+}
+
+initialize_capitals :: proc(lands: ^Lands, players: ^Players) -> (ok: bool) {
+	for &player, player_idx in players {
+		land_idx := get_land_idx_from_string(PLAYER_DATA[player_idx].capital) or_return
+		player.capital = &lands[land_idx]
+	}
+	return true
 }

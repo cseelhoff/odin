@@ -18,6 +18,22 @@ Idle_Ship :: enum {
 	BS_DAMAGED,
 }
 
+Idle_Ship_Names := [?]string {
+	Idle_Ship.TRANS_EMPTY = "TRANS_EMPTY",
+	Idle_Ship.TRANS_1I    = "TRANS_1I",
+	Idle_Ship.TRANS_1A    = "TRANS_1A",
+	Idle_Ship.TRANS_1T    = "TRANS_1T",
+	Idle_Ship.TRANS_2I    = "TRANS_2I",
+	Idle_Ship.TRANS_1I_1A = "TRANS_1I_1A",
+	Idle_Ship.TRANS_1I_1T = "TRANS_1I_1T",
+	Idle_Ship.SUB         = "SUB",
+	Idle_Ship.DESTROYER   = "DESTROYER",
+	Idle_Ship.CARRIER     = "CARRIER",
+	Idle_Ship.CRUISER     = "CRUISER",
+	Idle_Ship.BATTLESHIP  = "BATTLESHIP",
+	Idle_Ship.BS_DAMAGED  = "BS_DAMAGED",
+}
+
 DESTROYER_ATTACK :: 2
 CARRIER_ATTACK :: 1
 CRUISER_ATTACK :: 3
@@ -147,7 +163,7 @@ Bombard_Ships := []Active_Ship {
 }
 
 
-Ship_Names := [?]string {
+Active_Ship_Names := [?]string {
 	Active_Ship.TRANS_EMPTY_UNMOVED  = "TRANS_EMPTY_UNMOVED",
 	Active_Ship.TRANS_EMPTY_2_MOVES  = "TRANS_EMPTY_2_MOVES",
 	Active_Ship.TRANS_EMPTY_1_MOVES  = "TRANS_EMPTY_1_MOVES",
@@ -197,10 +213,16 @@ Ship_Names := [?]string {
 }
 
 Active_Ship_To_Idle := [?]Idle_Ship {
+	Active_Ship.TRANS_EMPTY_0_MOVES = .TRANS_EMPTY,
 	Active_Ship.TRANS_EMPTY_UNMOVED = .TRANS_EMPTY,
 	Active_Ship.TRANS_1I_UNMOVED    = .TRANS_1I,
 	Active_Ship.TRANS_1A_UNMOVED    = .TRANS_1A,
 	Active_Ship.TRANS_1T_UNMOVED    = .TRANS_1T,
+	Active_Ship.SUB_0_MOVES         = .SUB,
+	Active_Ship.DESTROYER_0_MOVES   = .DESTROYER,
+	Active_Ship.CARRIER_0_MOVES     = .CARRIER,
+	Active_Ship.CRUISER_0_MOVES     = .CRUISER,
+	Active_Ship.BATTLESHIP_0_MOVES  = .BATTLESHIP,
 }
 
 Unmoved_Blockade_Ships := [?]Active_Ship {
@@ -311,7 +333,7 @@ move_ship_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok:
 }
 
 move_next_ship_in_sea :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) -> (ok: bool) {
-	dst_air_idx := get_move_input(gc, Ship_Names[ship], src_sea) or_return
+	dst_air_idx := get_move_input(gc, Active_Ship_Names[ship], src_sea) or_return
 	gc.is_fighter_cache_current = false
 	flag_for_enemy_combat(gc.territories[dst_air_idx], gc.cur_player.team.enemy_team.index)
 	dst_sea := get_sea(gc, dst_air_idx)
@@ -337,7 +359,9 @@ add_valid_ship_moves :: proc(gc: ^Game_Cache, src_sea: ^Sea, ship: Active_Ship) 
 		sa.push(&gc.valid_moves, int(dst_sea.territory_index))
 	}
 	// for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[gc.canal_state].seas_2_moves_away) {
-	for &dst_sea_2_away in sa.slice(&src_sea.canal_paths[transmute(u8)gc.canals_open].seas_2_moves_away) {
+	for &dst_sea_2_away in sa.slice(
+		&src_sea.canal_paths[transmute(u8)gc.canals_open].seas_2_moves_away,
+	) {
 		if src_sea.skipped_moves[dst_sea_2_away.sea.territory_index] {
 			continue
 		}

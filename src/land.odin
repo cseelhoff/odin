@@ -56,10 +56,10 @@ Land_ID :: enum {
 	Tokyo,
 }
 
-get_land :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> (land: ^Land, ok: bool) {
+get_land :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> (land: ^Land) {
 	land_idx := int(air_idx)
 	assert(land_idx < LANDS_COUNT, "Invalid land index")
-	return &gc.lands[land_idx], true
+	return &gc.lands[land_idx]
 }
 
 //  PACIFIC | USA | ATLANTIC | ENG | BALTIC | GER | RUS | JAP | PAC
@@ -166,7 +166,7 @@ initialize_canals :: proc(lands: ^[LANDS_COUNT]Land) -> (ok: bool) {
 
 conquer_land :: proc(gc: ^Game_Cache, dst_land: ^Land) -> (ok: bool) {
 	old_owner := dst_land.owner
-	if old_owner.captial == dst_land {
+	if old_owner.capital == dst_land {
 		gc.cur_player.money += old_owner.money
 		old_owner.money = 0
 	}

@@ -11,6 +11,13 @@ Idle_Army :: enum {
 	AAGUN,
 }
 
+Idle_Army_Names := [?]string {
+	Idle_Army.INF   = "INF",
+	Idle_Army.ARTY  = "ARTY",
+	Idle_Army.TANK  = "TANK",
+	Idle_Army.AAGUN = "AAGUN",
+}
+
 INFANTRY_ATTACK :: 1
 ARTILLERY_ATTACK :: 2
 TANK_ATTACK :: 3
@@ -31,7 +38,7 @@ Active_Army :: enum {
 	AAGUN_0_MOVES,
 }
 
-Army_Names := [?]string {
+Active_Army_Names := [?]string {
 	Active_Army.INF_UNMOVED   = "INF_UNMOVED",
 	Active_Army.INF_0_MOVES   = "INF_0_MOVES",
 	Active_Army.ARTY_UNMOVED  = "ARTY_UNMOVED",
@@ -106,7 +113,7 @@ move_army_land :: proc(gc: ^Game_Cache, army: Active_Army, src_land: ^Land) -> (
 }
 
 move_next_army_in_land :: proc(gc: ^Game_Cache, army: Active_Army, src_land: ^Land) -> (ok: bool) {
-	dst_air_idx := get_move_input(gc, Army_Names[army], src_land) or_return
+	dst_air_idx := get_move_input(gc, Active_Army_Names[army], src_land) or_return
 	if check_load_transport(gc, army, src_land, dst_air_idx) do return true
 	dst_land := &gc.lands[dst_air_idx]
 	if skip_army(src_land, dst_land, army) do return true
@@ -196,7 +203,7 @@ add_valid_army_moves_2 :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Ar
 }
 
 add_valid_army_moves :: proc(gc: ^Game_Cache, src_land: ^Land, army: Active_Army) {
-	add_valid_army_moves_1(gc, src_land, army)	
+	add_valid_army_moves_1(gc, src_land, army)
 	if army != .TANK_UNMOVED do return
 	add_valid_army_moves_2(gc, src_land, army)
 }

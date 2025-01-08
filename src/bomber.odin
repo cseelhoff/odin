@@ -163,7 +163,7 @@ land_next_bomber_in_air :: proc(
 ) -> (
 	ok: bool,
 ) {
-	dst_air_idx := get_move_input(gc, Plane_Names[plane], src_air) or_return
+	dst_air_idx := get_move_input(gc, Active_Plane_Names[plane], src_air) or_return
 	dst_air := gc.territories[dst_air_idx]
 	move_single_plane(dst_air, Plane_After_Moves[plane], gc.cur_player, plane, src_air)
 	return true

@@ -164,7 +164,7 @@ land_next_fighter_in_air :: proc(
 	ok: bool,
 ) {
 	if crash_unlandable_fighters(gc, src_air, plane) do return true
-	dst_air_idx := get_move_input(gc, Plane_Names[plane], src_air) or_return
+	dst_air_idx := get_move_input(gc, Active_Plane_Names[plane], src_air) or_return
 	dst_air := gc.territories[dst_air_idx]
 	move_single_plane(dst_air, Plane_After_Moves[plane], gc.cur_player, plane, src_air)
 	if carrier_now_empty(gc, dst_air_idx) {

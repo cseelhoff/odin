@@ -109,7 +109,7 @@ reset_units_fully :: proc(gc: ^Game_Cache) {
 }
 
 collect_money :: proc(gc: ^Game_Cache) {
-	if gc.cur_player.captial.owner == gc.cur_player {
+	if gc.cur_player.capital.owner == gc.cur_player {
 		gc.cur_player.money += gc.cur_player.income_per_turn
 	}
 }
@@ -180,14 +180,4 @@ rotate_turns :: proc(gc: ^Game_Cache) {
 		sea.enemy_blockade_total += sea.enemy_destroyer_total
 	}
 	load_open_canals(gc)
-}
-
-load_open_canals :: proc (gc: ^Game_Cache) {
-	gc.canals_open = {}
-	for canal, canal_idx in Canal_Lands {
-		if canal[0].owner.team == gc.cur_player.team &&
-		   canal[1].owner.team == gc.cur_player.team {
-			gc.canals_open += {canal_idx}
-		}
-	}
 }

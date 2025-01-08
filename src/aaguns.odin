@@ -23,7 +23,7 @@ move_aagun_land :: proc(gc: ^Game_Cache, src_land: ^Land) -> (ok: bool) {
 }
 
 move_next_aagun_in_land :: proc(gc: ^Game_Cache, src_land: ^Land) -> (ok: bool) {
-	dst_air_idx := get_move_input(gc, Army_Names[Active_Army.AAGUN_UNMOVED], src_land) or_return
+	dst_air_idx := get_move_input(gc, Active_Army_Names[Active_Army.AAGUN_UNMOVED], src_land) or_return
   dst_land := &gc.lands[dst_air_idx]
 	if skip_army(src_land, dst_land, Active_Army.AAGUN_UNMOVED) do return true
 	move_single_army(

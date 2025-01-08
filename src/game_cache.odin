@@ -3,7 +3,8 @@ import sa "core:container/small_array"
 import "core:fmt"
 import "core:strings"
 
-MAX_VALID_MOVES :: 20
+BUY_ACTIONS_COUNT :: len(Buy_Action)
+MAX_VALID_MOVES :: TERRITORIES_COUNT + BUY_ACTIONS_COUNT
 
 Territory_Pointers :: [TERRITORIES_COUNT]^Territory
 SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory)
@@ -38,6 +39,7 @@ Game_Cache :: struct {
 initialize_map_constants :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	initialize_teams(&gc.teams, &gc.players)
 	initialize_territories(&gc.lands, &gc.seas, &gc.territories)
+	initialize_capitals(&gc.lands, &gc.players)
 	initialize_land_connections(&gc.lands) or_return
 	//initialize_sea_connections(&gc.canal_paths, &gc.seas) or_return
 	initialize_sea_connections(&gc.seas) or_return
@@ -62,21 +64,25 @@ load_cache_from_state :: proc(gc: ^Game_Cache, gs: ^Game_State) {
 	for money, i in gs.money {
 		gc.players[i].money = money
 	}
-	for &land, i in gs.land_state {
+	for &land, i in gs.land_states {
 		gc.lands[i].owner = &gc.players[land.owner]
-		gc.lands[i].factory_dmg = land.factory_dmg
 		gc.lands[i].factory_prod = land.factory_prod
+		if land.factory_prod > 0 {
+			sa.push(&gc.players[land.owner].factory_locations, &gc.lands[i])
+		}
+		gc.lands[i].factory_dmg = land.factory_dmg
 		gc.lands[i].max_bombards = land.max_bombards
 		gc.lands[i].idle_armies = land.idle_armies
 		gc.lands[i].active_armies = land.active_armies
 		gc.lands[i].builds_left = land.builds_left
 		load_territory_from_state(&gc.lands[i].territory, &land.territory_state)
 	}
-	for &sea, i in gs.sea_state {
+	for &sea, i in gs.sea_states {
 		gc.seas[i].idle_ships = sea.idle_ships
 		gc.seas[i].active_ships = sea.active_ships
 		load_territory_from_state(&gc.seas[i].territory, &sea.territory_state)
 	}
+	load_open_canals(gc)
 }
 
 load_territory_from_state :: proc(territory: ^Territory, ts: ^Territory_State) {
@@ -85,4 +91,14 @@ load_territory_from_state :: proc(territory: ^Territory, ts: ^Territory_State) {
 	territory.skipped_moves = ts.skipped_moves
 	territory.active_planes = ts.active_planes
 	territory.idle_planes = ts.idle_planes
+}
+
+load_open_canals :: proc (gc: ^Game_Cache) {
+	gc.canals_open = {}
+	for canal, canal_idx in Canal_Lands {
+		if canal[0].owner.team == gc.cur_player.team &&
+		   canal[1].owner.team == gc.cur_player.team {
+			gc.canals_open += {canal_idx}
+		}
+	}
 }
