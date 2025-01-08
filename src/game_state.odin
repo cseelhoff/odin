@@ -8,7 +8,7 @@ Game_State :: struct {
 	cur_player: int,
 	seed:       int,
 	money:      [PLAYERS_COUNT]int,
-	land_state: #soa[len(LANDS_DATA)]Land_State,
+	land_state: #soa[LANDS_COUNT]Land_State,
 	sea_state:  #soa[SEAS_COUNT]Sea_State,
 }
 

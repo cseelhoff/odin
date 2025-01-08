@@ -7,7 +7,8 @@ import "core:slice"
 import "core:strings"
 
 MAX_LAND_TO_SEA_CONNECTIONS :: 4
-Lands :: [len(LANDS_DATA)]Land
+LANDS_COUNT :: len(LANDS_DATA)
+Lands :: [LANDS_COUNT]Land
 MAX_PATHS_TO_LAND :: 2
 SA_Adjacent_L2S :: sa.Small_Array(MAX_LAND_TO_SEA_CONNECTIONS, ^Sea)
 
@@ -24,15 +25,15 @@ Land :: struct {
 	idle_armies:        [PLAYERS_COUNT]Idle_Army_For_Player,
 	active_armies:      [len(Active_Army)]int,
 	owner:              ^Player,
-	factory_dmg:     int,
-	factory_prod: int,
+	factory_dmg:        int,
+	factory_prod:       int,
 	max_bombards:       int,
-	lands_2_moves_away: sa.Small_Array(len(LANDS_DATA), Land_2_Moves_Away),
+	lands_2_moves_away: sa.Small_Array(LANDS_COUNT, Land_2_Moves_Away),
 	seas_2_moves_away:  sa.Small_Array(SEAS_COUNT, L2S_2_Moves_Away),
 	adjacent_seas:      SA_Adjacent_L2S,
 	original_owner:     ^Player,
 	value:              int,
-	land_distances:     [len(LANDS_DATA)]int,
+	land_distances:     [LANDS_COUNT]int,
 	land_index:         Land_ID,
 }
 
@@ -56,7 +57,7 @@ Land_ID :: enum {
 
 get_land :: proc(gc: ^Game_Cache, air_idx: Air_ID) -> (land: ^Land, ok: bool) {
 	land_idx := int(air_idx)
-	assert(land_idx < len(LANDS_DATA), "Invalid land index")
+	assert(land_idx < LANDS_COUNT, "Invalid land index")
 	return &gc.lands[land_idx], true
 }
 
@@ -94,7 +95,7 @@ initialize_land_connections :: proc(lands: ^Lands) -> (ok: bool) {
 initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 	// Floyd-Warshall algorithm
 	// Initialize distances array to Infinity
-	distances: [len(LANDS_DATA)][len(LANDS_DATA)]uint
+	distances: [LANDS_COUNT][LANDS_COUNT]uint
 	INFINITY :: 255
 	mem.set(&distances, INFINITY, len(distances))
 	for &land, land_idx in lands {
@@ -105,9 +106,9 @@ initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 			distances[land_idx][adjacent_land.land_index] = 1
 		}
 	}
-	for mid_idx in 0 ..< len(LANDS_DATA) {
-		for start_idx in 0 ..< len(LANDS_DATA) {
-			for end_idx in 0 ..< len(LANDS_DATA) {
+	for mid_idx in 0 ..< LANDS_COUNT {
+		for start_idx in 0 ..< LANDS_COUNT {
+			for end_idx in 0 ..< LANDS_COUNT {
 				new_dist := distances[start_idx][mid_idx] + distances[mid_idx][end_idx]
 				if new_dist < distances[start_idx][end_idx] {
 					distances[start_idx][end_idx] = new_dist
@@ -133,7 +134,7 @@ initialize_lands_2_moves_away :: proc(lands: ^Lands) {
 	}
 }
 
-initialize_canals :: proc(lands: ^[len(LANDS_DATA)]Land) -> (ok: bool) {
+initialize_canals :: proc(lands: ^[LANDS_COUNT]Land) -> (ok: bool) {
 	// convert canal_state to a bitmask and loop through CANALS for those
 	// enabled for example if canal_state is 0, do not process any items in
 	// CANALS, if canal_state is 1, process the first item in CANALS, if

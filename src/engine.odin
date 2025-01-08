@@ -28,9 +28,9 @@ play_full_turn :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	buy_units(gc) or_return
 	//crash_air_units(gc) or_return
 	buy_factory(gc) or_return
-	reset_units_fully(gc) or_return
-	collect_money(gc) or_return
-	rotate_turns(gc) or_return
+	reset_units_fully(gc) 
+	collect_money(gc) 
+	rotate_turns(gc) 
 	return true
 }
 
@@ -97,12 +97,30 @@ buy_factory :: proc(gc: ^Game_Cache) -> (ok: bool) {
 	return true
 }
 
-reset_units_fully :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
+reset_units_fully :: proc(gc: ^Game_Cache) {
+  for &sea in gc.seas {
+		sea.active_ships[Active_Ship.BATTLESHIP_0_MOVES] += sea.active_ships[Active_Ship.BS_DAMAGED_0_MOVES]
+		sea.active_ships[Active_Ship.BATTLESHIP_BOMBARDED] += sea.active_ships[Active_Ship.BS_DAMAGED_BOMBARDED]
+		sea.idle_ships[gc.cur_player.index][Idle_Ship.BATTLESHIP] += sea.idle_ships[gc.cur_player.index][Idle_Ship.BS_DAMAGED]
+	}
 }
-collect_money :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
+
+collect_money :: proc(gc: ^Game_Cache) {
+	if gc.cur_player.captial.owner == gc.cur_player {
+		gc.cur_player.money += gc.cur_player.income_per_turn
+	}
 }
-rotate_turns :: proc(gc: ^Game_Cache) -> (ok: bool) {
-	return false
+
+rotate_turns :: proc(gc: ^Game_Cache) {
+	// set active army,ship,planes
+  // for (uint factory_idx = 0; factory_idx < total_factory_count[0]; factory_idx++) {
+  //   uint dst_land = factory_locations[0][factory_idx];
+  //   state.builds_left[dst_land] = *factory_max[dst_land];
+  //   for (uint sea_idx = 0; sea_idx < LAND_TO_SEA_COUNT[dst_land]; sea_idx++) {
+  //     state.builds_left[LAND_TO_SEA_CONN[dst_land][sea_idx] + LANDS_COUNT] +=
+  //         *factory_max[dst_land];
+  //   }
+  // }
+	//refresh canals
+
 }

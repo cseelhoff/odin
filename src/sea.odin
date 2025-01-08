@@ -7,7 +7,7 @@ import "core:strings"
 
 MAX_SEA_TO_LAND_CONNECTIONS :: 6
 MAX_SEA_TO_SEA_CONNECTIONS :: 7
-SEAS_COUNT :: len(SEAS_STRINGS)
+SEAS_COUNT :: len(SEAS_DATA)
 Seas :: [SEAS_COUNT]Sea
 CANALS_COUNT :: len(CANALS)
 CANAL_STATES :: 1 << CANALS_COUNT
@@ -52,23 +52,23 @@ Sea_ID :: enum {
 	Baltic,
 }
 
-SEAS_STRINGS :: [?]string{"Pacific", "Atlantic", "Baltic"}
+SEAS_DATA :: [?]string{"Pacific", "Atlantic", "Baltic"}
 SEA_CONNECTIONS :: [?][2]string{{"Pacific", "Atlantic"}, {"Atlantic", "Baltic"}}
 CANALS :: [?]Canal{{lands = {"Moscow", "Moscow"}, seas = {"Pacific", "Baltic"}}}
 Canal_Lands: [CANALS_COUNT][2]^Land
 
 get_sea_id :: proc(air_idx: Air_ID) -> Sea_ID {
-	assert(int(air_idx) > len(LANDS_DATA), "Invalid air index")
-	return Sea_ID(int(air_idx) - len(LANDS_DATA))
+	assert(int(air_idx) > LANDS_COUNT, "Invalid air index")
+	return Sea_ID(int(air_idx) - LANDS_COUNT)
 }
 
 get_sea::proc(gc: ^Game_Cache, air_idx: Air_ID) -> ^Sea {
-	assert(int(air_idx) > len(LANDS_DATA), "Invalid air index")
-	return &gc.seas[int(air_idx) - len(LANDS_DATA)]
+	assert(int(air_idx) > LANDS_COUNT, "Invalid air index")
+	return &gc.seas[int(air_idx) - LANDS_COUNT]
 }
 
 get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
-	for sea_string, sea_idx in SEAS_STRINGS {
+	for sea_string, sea_idx in SEAS_DATA {
 		if strings.compare(sea_string, sea_name) == 0 {
 			return sea_idx, true
 		}
@@ -77,7 +77,7 @@ get_sea_idx_from_string :: proc(sea_name: string) -> (sea_idx: int, ok: bool) {
 	return 0, false
 }
 initialize_sea_connections :: proc(seas: ^Seas) -> (ok: bool) {
-	for sea_name, sea_idx in SEAS_STRINGS {
+	for sea_name, sea_idx in SEAS_DATA {
 		seas[sea_idx].name = sea_name
 	}
 	for connection in SEA_CONNECTIONS {

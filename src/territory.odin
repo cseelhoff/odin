@@ -2,7 +2,7 @@ package oaaa
 import sa "core:container/small_array"
 import "core:mem"
 
-TERRITORIES_COUNT :: len(LANDS_DATA) + SEAS_COUNT
+TERRITORIES_COUNT :: LANDS_COUNT + SEAS_COUNT
 MAX_TERRITORY_TO_LAND_CONNECTIONS :: 6
 MAX_AIR_TO_AIR_CONNECTIONS :: 7
 SA_Adjacent_Lands :: sa.Small_Array(MAX_TERRITORY_TO_LAND_CONNECTIONS, ^Land)
@@ -56,7 +56,7 @@ Air_ID :: enum {
 }
 
 is_land :: proc(terr: ^Territory) -> bool {
-	return int(terr.territory_index) < len(LANDS_DATA)
+	return int(terr.territory_index) < LANDS_COUNT
 }
 
 COASTAL_CONNECTIONS := [?]Coastal_Connection_String {
@@ -78,7 +78,7 @@ initialize_territories :: proc(lands: ^Lands, seas: ^Seas, territories: ^Territo
 	}
 	for &sea, sea_idx in seas {
 		sea.sea_index = Sea_ID(sea_idx)
-		sea.territory_index = Air_ID(sea_idx + len(LANDS_DATA))
+		sea.territory_index = Air_ID(sea_idx + LANDS_COUNT)
 		territories[sea.territory_index] = &sea.territory
 	}
 }

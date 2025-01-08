@@ -7,7 +7,7 @@ MAX_VALID_MOVES :: 20
 
 Territory_Pointers :: [TERRITORIES_COUNT]^Territory
 SA_Territory_Pointers :: sa.Small_Array(TERRITORIES_COUNT, ^Territory)
-SA_Land_Pointers :: sa.Small_Array(len(LANDS_DATA), ^Land)
+SA_Land_Pointers :: sa.Small_Array(LANDS_COUNT, ^Land)
 SA_Player_Pointers :: sa.Small_Array(PLAYERS_COUNT, ^Player)
 
 Game_Cache :: struct {
